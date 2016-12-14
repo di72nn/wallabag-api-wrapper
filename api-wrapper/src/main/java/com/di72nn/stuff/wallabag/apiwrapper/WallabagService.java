@@ -37,6 +37,12 @@ public class WallabagService {
 	private String refreshToken;
 	private String accessToken;
 
+	private TokenUpdateListener tokenUpdateListener;
+
+	public interface TokenUpdateListener {
+		void tokenUpdated(TokenResponse token);
+	}
+
 	public static final class EntriesQueryBuilder {
 
 		public enum SortCriterion {
@@ -407,6 +413,10 @@ public class WallabagService {
 		this.accessToken = accessToken;
 	}
 
+	public void setTokenUpdateListener(TokenUpdateListener tokenUpdateListener) {
+		this.tokenUpdateListener = tokenUpdateListener;
+	}
+
 	public EntriesQueryBuilder getEntriesBuilder() {
 		return new EntriesQueryBuilder(this);
 	}
@@ -595,6 +605,14 @@ public class WallabagService {
 		LOG.info("Got token: " + tokenResponse); // TODO: remove: sensitive
 		accessToken = tokenResponse.accessToken;
 		if(tokenResponse.refreshToken != null) refreshToken = tokenResponse.refreshToken;
+
+		if(tokenUpdateListener != null) {
+			try {
+				tokenUpdateListener.tokenUpdated(tokenResponse);
+			} catch(Exception e) {
+				LOG.error("tokenUpdateListener exception", e);
+			}
+		}
 
 		LOG.info("finished");
 
