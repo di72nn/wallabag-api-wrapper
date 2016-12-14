@@ -1,0 +1,13 @@
+# local configuration file (sdk path, etc)
+/local.properties
+
+# Gradle
+.gradle/
+build/
+
+# OSX files
+.DS_Store
+
+# IDEA / Android Studio
+*.iml
+.idea/
