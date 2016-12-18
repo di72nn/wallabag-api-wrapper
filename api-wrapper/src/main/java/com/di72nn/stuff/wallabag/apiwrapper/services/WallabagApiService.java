@@ -1,7 +1,7 @@
 package com.di72nn.stuff.wallabag.apiwrapper.services;
 
 import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Entries;
+import com.di72nn.stuff.wallabag.apiwrapper.models.Articles;
 import com.di72nn.stuff.wallabag.apiwrapper.models.ExistsResponse;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
 import okhttp3.RequestBody;
@@ -14,25 +14,25 @@ import java.util.Map;
 public interface WallabagApiService {
 
 	@GET("api/entries.json")
-	Call<Entries> getEntries(@QueryMap Map<String, String> parameters);
+	Call<Articles> getArticles(@QueryMap Map<String, String> parameters);
 
 	@POST("api/entries.json")
-	Call<Article> addEntry(@Body RequestBody requestBody);
+	Call<Article> addArticle(@Body RequestBody requestBody);
 
 	@GET("api/entries/exists.json")
 	Call<ExistsResponse> exists(@Query("url") String url);
 
 	@DELETE("api/entries/{entry}.json")
-	Call<Article> deleteEntry(@Path("entry") int entryID);
+	Call<Article> deleteArticle(@Path("entry") int articleID);
 
 	@GET("api/entries/{entry}.json")
-	Call<Article> getEntry(@Path("entry") int entryID);
+	Call<Article> getArticle(@Path("entry") int articleID);
 
 	@PATCH("api/entries/{entry}.json")
-	Call<Article> modifyEntry(@Path("entry") int entryID, @Body RequestBody requestBody);
+	Call<Article> modifyArticle(@Path("entry") int articleID, @Body RequestBody requestBody);
 
 	@GET("api/entries/{entry}/tags.json")
-	Call<List<Tag>> getTags(@Path("entry") int entryID);
+	Call<List<Tag>> getTags(@Path("entry") int articleID);
 
 	@DELETE("/api/tag/label.json")
 	Call<Tag> deleteTag(@Query("tag") String tag);

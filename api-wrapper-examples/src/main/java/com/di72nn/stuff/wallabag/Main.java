@@ -4,7 +4,7 @@ import com.di72nn.stuff.wallabag.apiwrapper.BasicParameterHandler;
 import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Entries;
+import com.di72nn.stuff.wallabag.apiwrapper.models.Articles;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
 
 import java.io.IOException;
@@ -30,19 +30,19 @@ public class Main {
 		try {
 			System.out.println("Server version: " + service.getVersion());
 
-			Article article = service.addEntryBuilder("http://doc.wallabag.org/en/master/developer/api.html")
+			Article article = service.addArticleBuilder("http://doc.wallabag.org/en/master/developer/api.html")
 					.starred(true)
 					.tag("new_test_tag1").tag("new_test_tag2").tag("test_rm")
 					.title("Custom title test")
 					.execute();
 
-			article = service.modifyEntryBuilder(article.id)
+			article = service.modifyArticleBuilder(article.id)
 					.title("Modified title for API documentation article").execute();
 			System.out.println("Modified article title: " + article.title);
 
-			System.out.println("Exists: " + service.entryExists("http://doc.wallabag.org/en/master/developer/api.html"));
+			System.out.println("Exists: " + service.articleExists("http://doc.wallabag.org/en/master/developer/api.html"));
 
-			System.out.println("Article title: " + service.getEntry(article.id).title);
+			System.out.println("Article title: " + service.getArticle(article.id).title);
 
 			List<Tag> tags = service.getTags();
 			int idForRemoval = -1;
@@ -54,12 +54,12 @@ public class Main {
 
 			if(idForRemoval >= 0) System.out.println("Deleted tag label: " + service.deleteTag(idForRemoval).label);
 
-			System.out.println("Deleted article title: " + service.deleteEntry(article.id).title);
+			System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
 
-			Entries entries = service.getEntriesBuilder().perPage(3).execute();
-			System.out.println("Items length: " + entries.embedded.items.size());
+			Articles articles = service.getArticlesBuilder().perPage(3).execute();
+			System.out.println("Items length: " + articles.embedded.items.size());
 
-			for(Article a: entries.embedded.items) {
+			for(Article a: articles.embedded.items) {
 				System.out.println("ID: " + a.id);
 				System.out.println("Title: " + a.title);
 				System.out.println("Is archived: " + a.archived);

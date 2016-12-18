@@ -65,7 +65,7 @@ public class WallabagService {
 
 	}
 
-	public final class EntriesQueryBuilder {
+	public final class ArticlesQueryBuilder {
 
 		private Boolean archive;
 		private Boolean starred;
@@ -76,40 +76,40 @@ public class WallabagService {
 		private Set<String> tags;
 		private long since = 0;
 
-		private EntriesQueryBuilder() {}
+		private ArticlesQueryBuilder() {}
 
-		public EntriesQueryBuilder archive(boolean archive) {
+		public ArticlesQueryBuilder archive(boolean archive) {
 			this.archive = archive;
 			return this;
 		}
 
-		public EntriesQueryBuilder starred(boolean starred) {
+		public ArticlesQueryBuilder starred(boolean starred) {
 			this.starred = starred;
 			return this;
 		}
 
-		public EntriesQueryBuilder sortCriterion(SortCriterion sortCriterion) {
+		public ArticlesQueryBuilder sortCriterion(SortCriterion sortCriterion) {
 			this.sortCriterion = sortCriterion;
 			return this;
 		}
 
-		public EntriesQueryBuilder sortOrder(SortOrder sortOrder) {
+		public ArticlesQueryBuilder sortOrder(SortOrder sortOrder) {
 			this.sortOrder = sortOrder;
 			return this;
 		}
 
-		public EntriesQueryBuilder page(int page) {
+		public ArticlesQueryBuilder page(int page) {
 			this.page = page;
 			return this;
 		}
 
-		public EntriesQueryBuilder perPage(int perPage) {
+		public ArticlesQueryBuilder perPage(int perPage) {
 			this.perPage = perPage;
 			return this;
 		}
 
 		// TODO: reuse code
-		public EntriesQueryBuilder tag(String tag) {
+		public ArticlesQueryBuilder tag(String tag) {
 			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
@@ -121,7 +121,7 @@ public class WallabagService {
 			return this;
 		}
 
-		public EntriesQueryBuilder tags(Collection<String> tags) {
+		public ArticlesQueryBuilder tags(Collection<String> tags) {
 			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
@@ -133,7 +133,7 @@ public class WallabagService {
 			return this;
 		}
 
-		public EntriesQueryBuilder since(long since) {
+		public ArticlesQueryBuilder since(long since) {
 			this.since = since;
 			return this;
 		}
@@ -155,17 +155,17 @@ public class WallabagService {
 			return parameters;
 		}
 
-		public Call<Entries> buildCall() {
-			return getEntriesCall(build());
+		public Call<Articles> buildCall() {
+			return getArticlesCall(build());
 		}
 
-		public Entries execute() throws IOException, UnsuccessfulResponseException {
-			return getEntries(build());
+		public Articles execute() throws IOException, UnsuccessfulResponseException {
+			return getArticles(build());
 		}
 
 	}
 
-	public class AddEntryBuilder {
+	public class AddArticleBuilder {
 
 		private final String url;
 		private String title;
@@ -173,16 +173,16 @@ public class WallabagService {
 		private Boolean starred;
 		private Boolean archive;
 
-		private AddEntryBuilder(String url) {
+		private AddArticleBuilder(String url) {
 			this.url = nonEmptyString(url, "url");
 		}
 
-		public AddEntryBuilder title(String title) {
+		public AddArticleBuilder title(String title) {
 			this.title = nonEmptyString(title, "title");
 			return this;
 		}
 
-		public AddEntryBuilder tag(String tag) {
+		public AddArticleBuilder tag(String tag) {
 			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
@@ -194,7 +194,7 @@ public class WallabagService {
 			return this;
 		}
 
-		public AddEntryBuilder tags(Collection<String> tags) {
+		public AddArticleBuilder tags(Collection<String> tags) {
 			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
@@ -206,12 +206,12 @@ public class WallabagService {
 			return this;
 		}
 
-		public AddEntryBuilder starred(boolean starred) {
+		public AddArticleBuilder starred(boolean starred) {
 			this.starred = starred;
 			return this;
 		}
 
-		public AddEntryBuilder archive(boolean archive) {
+		public AddArticleBuilder archive(boolean archive) {
 			this.archive = archive;
 			return this;
 		}
@@ -231,16 +231,16 @@ public class WallabagService {
 		}
 
 		public Call<Article> buildCall() {
-			return addEntryCall(build());
+			return addArticleCall(build());
 		}
 
 		public Article execute() throws IOException, UnsuccessfulResponseException {
-			return addEntry(build());
+			return addArticle(build());
 		}
 
 	}
 
-	public class ModifyEntryBuilder {
+	public class ModifyArticleBuilder {
 
 		private final int id;
 		private String title;
@@ -248,18 +248,18 @@ public class WallabagService {
 		private Boolean starred;
 		private Boolean archive;
 
-		private ModifyEntryBuilder(int id) {
+		private ModifyArticleBuilder(int id) {
 			if(id < 0) throw new IllegalArgumentException("ID is less then zero: " + id);
 
 			this.id = id;
 		}
 
-		public ModifyEntryBuilder title(String title) {
+		public ModifyArticleBuilder title(String title) {
 			this.title = nonEmptyString(title, "title");
 			return this;
 		}
 
-		public ModifyEntryBuilder tag(String tag) {
+		public ModifyArticleBuilder tag(String tag) {
 			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
@@ -271,7 +271,7 @@ public class WallabagService {
 			return this;
 		}
 
-		public ModifyEntryBuilder tags(Collection<String> tags) {
+		public ModifyArticleBuilder tags(Collection<String> tags) {
 			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
@@ -283,12 +283,12 @@ public class WallabagService {
 			return this;
 		}
 
-		public ModifyEntryBuilder starred(boolean starred) {
+		public ModifyArticleBuilder starred(boolean starred) {
 			this.starred = starred;
 			return this;
 		}
 
-		public ModifyEntryBuilder archive(boolean archive) {
+		public ModifyArticleBuilder archive(boolean archive) {
 			this.archive = archive;
 			return this;
 		}
@@ -323,11 +323,11 @@ public class WallabagService {
 		}
 
 		public Call<Article> buildCall() {
-			return modifyEntryCall(id, build());
+			return modifyArticleCall(id, build());
 		}
 
 		public Article execute() throws IOException, UnsuccessfulResponseException {
-			return modifyEntry(id, build());
+			return modifyArticle(id, build());
 		}
 
 	}
@@ -389,85 +389,85 @@ public class WallabagService {
 		wallabagApiService = retrofit.create(WallabagApiService.class);
 	}
 
-	public EntriesQueryBuilder getEntriesBuilder() {
-		return new EntriesQueryBuilder();
+	public ArticlesQueryBuilder getArticlesBuilder() {
+		return new ArticlesQueryBuilder();
 	}
 
-	public AddEntryBuilder addEntryBuilder(String url) {
-		return new AddEntryBuilder(url);
+	public AddArticleBuilder addArticleBuilder(String url) {
+		return new AddArticleBuilder(url);
 	}
 
-	public Article addEntry(String url) throws IOException, UnsuccessfulResponseException {
-		return new AddEntryBuilder(url).execute();
+	public Article addArticle(String url) throws IOException, UnsuccessfulResponseException {
+		return addArticleBuilder(url).execute();
 	}
 
-	public ModifyEntryBuilder modifyEntryBuilder(int id) {
-		return new ModifyEntryBuilder(id);
+	public ModifyArticleBuilder modifyArticleBuilder(int id) {
+		return new ModifyArticleBuilder(id);
 	}
 
-	private Call<Entries> getEntriesCall(Map<String, String> parameters) {
-		return wallabagApiService.getEntries(parameters);
+	private Call<Articles> getArticlesCall(Map<String, String> parameters) {
+		return wallabagApiService.getArticles(parameters);
 	}
 
-	private Entries getEntries(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getEntriesCall(parameters).execute()).body();
+	private Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getArticlesCall(parameters).execute()).body();
 	}
 
-	private Call<Article> addEntryCall(RequestBody requestBody) {
-		return wallabagApiService.addEntry(requestBody);
+	private Call<Article> addArticleCall(RequestBody requestBody) {
+		return wallabagApiService.addArticle(requestBody);
 	}
 
-	private Article addEntry(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(addEntryCall(requestBody).execute()).body();
+	private Article addArticle(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(addArticleCall(requestBody).execute()).body();
 	}
 
-	public Call<ExistsResponse> entryExistsCall(String url) {
+	public Call<ExistsResponse> articleExistsCall(String url) {
 		return wallabagApiService.exists(nonEmptyString(url, "URL"));
 	}
 
-	public boolean entryExists(String url) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(entryExistsCall(url).execute()).body().exists;
+	public boolean articleExists(String url) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(articleExistsCall(url).execute()).body().exists;
 	}
 
-	public Call<Article> deleteEntryCall(int entryID) {
-		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
+	public Call<Article> deleteArticleCall(int articleID) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
 
-		return wallabagApiService.deleteEntry(entryID);
+		return wallabagApiService.deleteArticle(articleID);
 	}
 
-	public Article deleteEntry(int entryID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteEntryCall(entryID).execute()).body();
+	public Article deleteArticle(int articleID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteArticleCall(articleID).execute()).body();
 	}
 
-	public Call<Article> getEntryCall(int entryID) {
-		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
+	public Call<Article> getArticleCall(int articleID) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
 
-		return wallabagApiService.getEntry(entryID);
+		return wallabagApiService.getArticle(articleID);
 	}
 
-	public Article getEntry(int entryID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getEntryCall(entryID).execute()).body();
+	public Article getArticle(int articleID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getArticleCall(articleID).execute()).body();
 	}
 
-	private Call<Article> modifyEntryCall(int entryID, RequestBody requestBody) {
-		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
+	private Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
 
-		return wallabagApiService.modifyEntry(entryID, requestBody);
+		return wallabagApiService.modifyArticle(articleID, requestBody);
 	}
 
-	private Article modifyEntry(int entryID, RequestBody requestBody)
+	private Article modifyArticle(int articleID, RequestBody requestBody)
 			throws IOException, UnsuccessfulResponseException {
-		return checkResponse(modifyEntryCall(entryID, requestBody).execute()).body();
+		return checkResponse(modifyArticleCall(articleID, requestBody).execute()).body();
 	}
 
-	public Call<List<Tag>> getTagsCall(int entryID) {
-		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
+	public Call<List<Tag>> getTagsCall(int articleID) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
 
-		return wallabagApiService.getTags(entryID);
+		return wallabagApiService.getTags(articleID);
 	}
 
-	public List<Tag> getTags(int entryID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getTagsCall(entryID).execute()).body();
+	public List<Tag> getTags(int articleID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getTagsCall(articleID).execute()).body();
 	}
 
 	public Call<List<Tag>> getTagsCall() {
