@@ -1,6 +1,7 @@
 package com.di72nn.stuff.wallabag.apiwrapper;
 
 import com.di72nn.stuff.wallabag.apiwrapper.adapters.NumericBooleanAdapter;
+import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagApiService;
 import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagAuthService;
@@ -137,8 +138,7 @@ public class WallabagService {
 			return this;
 		}
 
-		// TODO: make package-private?
-		public Map<String, String> build() {
+		private Map<String, String> build() {
 			Map<String, String> parameters = new HashMap<>();
 
 			if(archive != null) parameters.put("archive", Utils.booleanToNumberString(archive));
@@ -155,7 +155,11 @@ public class WallabagService {
 			return parameters;
 		}
 
-		public Entries execute() throws IOException {
+		public Call<Entries> buildCall() {
+			return getEntriesCall(build());
+		}
+
+		public Entries execute() throws IOException, UnsuccessfulResponseException {
 			return getEntries(build());
 		}
 
@@ -212,8 +216,7 @@ public class WallabagService {
 			return this;
 		}
 
-		// TODO: make package-private?
-		public RequestBody build() {
+		private RequestBody build() {
 			FormBody.Builder bodyBuilder = new FormBody.Builder()
 					.add("url", url);
 
@@ -227,7 +230,11 @@ public class WallabagService {
 			return bodyBuilder.build();
 		}
 
-		public Article execute() throws IOException {
+		public Call<Article> buildCall() {
+			return addEntryCall(build());
+		}
+
+		public Article execute() throws IOException, UnsuccessfulResponseException {
 			return addEntry(build());
 		}
 
@@ -286,8 +293,7 @@ public class WallabagService {
 			return this;
 		}
 
-		// TODO: make package-private?
-		public RequestBody build() {
+		private RequestBody build() {
 			FormBody.Builder bodyBuilder = new FormBody.Builder();
 
 			boolean changed = false;
@@ -316,7 +322,11 @@ public class WallabagService {
 			return bodyBuilder.build();
 		}
 
-		public Article execute() throws IOException {
+		public Call<Article> buildCall() {
+			return modifyEntryCall(id, build());
+		}
+
+		public Article execute() throws IOException, UnsuccessfulResponseException {
 			return modifyEntry(id, build());
 		}
 
@@ -340,6 +350,8 @@ public class WallabagService {
 				LOG.info("intercept() unsuccessful response; code: " + response.code());
 
 				if(response.code() == 401) {
+					LOG.debug("response body: " + response.body().string());
+
 					getAccessToken();
 
 					request = setAuthHeader(originalRequest.newBuilder()).build();
@@ -385,130 +397,121 @@ public class WallabagService {
 		return new AddEntryBuilder(url);
 	}
 
+	public Article addEntry(String url) throws IOException, UnsuccessfulResponseException {
+		return new AddEntryBuilder(url).execute();
+	}
+
 	public ModifyEntryBuilder modifyEntryBuilder(int id) {
 		return new ModifyEntryBuilder(id);
 	}
 
-	public Entries getEntries(Map<String, String> parameters) throws IOException {
-		Response<Entries> response = wallabagApiService.getEntries(parameters).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+	private Call<Entries> getEntriesCall(Map<String, String> parameters) {
+		return wallabagApiService.getEntries(parameters);
 	}
 
-	// TODO: add a convenience method with one parameter?
-	private Article addEntry(RequestBody requestBody) throws IOException {
-		Response<Article> response = wallabagApiService.addEntry(requestBody).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+	private Entries getEntries(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getEntriesCall(parameters).execute()).body();
 	}
 
-	public boolean entryExists(String url) throws IOException {
-		nonEmptyString(url, "URL");
-
-		Response<ExistsResponse> response = wallabagApiService.exists(url).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body().exists;
+	private Call<Article> addEntryCall(RequestBody requestBody) {
+		return wallabagApiService.addEntry(requestBody);
 	}
 
-	public Article deleteEntry(int entryID) throws IOException {
+	private Article addEntry(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(addEntryCall(requestBody).execute()).body();
+	}
+
+	public Call<ExistsResponse> entryExistsCall(String url) {
+		return wallabagApiService.exists(nonEmptyString(url, "URL"));
+	}
+
+	public boolean entryExists(String url) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(entryExistsCall(url).execute()).body().exists;
+	}
+
+	public Call<Article> deleteEntryCall(int entryID) {
 		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
 
-		Response<Article> response = wallabagApiService.deleteEntry(entryID).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+		return wallabagApiService.deleteEntry(entryID);
 	}
 
-	public Article getEntry(int entryID) throws IOException {
+	public Article deleteEntry(int entryID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteEntryCall(entryID).execute()).body();
+	}
+
+	public Call<Article> getEntryCall(int entryID) {
 		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
 
-		Response<Article> response = wallabagApiService.getEntry(entryID).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+		return wallabagApiService.getEntry(entryID);
 	}
 
-	private Article modifyEntry(int entryID, RequestBody requestBody) throws IOException {
+	public Article getEntry(int entryID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getEntryCall(entryID).execute()).body();
+	}
+
+	private Call<Article> modifyEntryCall(int entryID, RequestBody requestBody) {
 		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
 
-		Response<Article> response = wallabagApiService.modifyEntry(entryID, requestBody).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+		return wallabagApiService.modifyEntry(entryID, requestBody);
 	}
 
-	public List<Tag> getTags(int entryID) throws IOException {
+	private Article modifyEntry(int entryID, RequestBody requestBody)
+			throws IOException, UnsuccessfulResponseException {
+		return checkResponse(modifyEntryCall(entryID, requestBody).execute()).body();
+	}
+
+	public Call<List<Tag>> getTagsCall(int entryID) {
 		if(entryID < 0) throw new IllegalArgumentException("entryID is less than zero: " + entryID);
 
-		Response<List<Tag>> response = wallabagApiService.getTags(entryID).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+		return wallabagApiService.getTags(entryID);
 	}
 
-	public List<Tag> getTags() throws IOException {
-		Response<List<Tag>> response = wallabagApiService.getTags().execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+	public List<Tag> getTags(int entryID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getTagsCall(entryID).execute()).body();
 	}
 
-	public Tag deleteTag(String tagLabel) throws IOException {
-		nonEmptyString(tagLabel, "tagLabel");
-
-		Response<Tag> response = wallabagApiService.deleteTag(tagLabel).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+	public Call<List<Tag>> getTagsCall() {
+		return wallabagApiService.getTags();
 	}
 
-	public Tag deleteTag(int tagID) throws IOException {
+	public List<Tag> getTags() throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getTagsCall().execute()).body();
+	}
+
+	// always throws 404 because of server bug
+	public Call<Tag> deleteTagCall(String tagLabel) {
+		return wallabagApiService.deleteTag(nonEmptyString(tagLabel, "tagLabel"));
+	}
+
+	public Tag deleteTag(String tagLabel) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteTagCall(tagLabel).execute()).body();
+	}
+
+	public Call<Tag> deleteTagCall(int tagID) {
 		if(tagID < 0) throw new IllegalArgumentException("tagID is less than zero: " + tagID);
 
-		Response<Tag> response = wallabagApiService.deleteTag(tagID).execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+		return wallabagApiService.deleteTag(tagID);
 	}
 
-	public String getVersion() throws IOException {
-		Response<String> response = wallabagApiService.getVersion().execute();
-
-		// TODO: handle errors
-		checkForError(response);
-
-		return response.body();
+	public Tag deleteTag(int tagID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteTagCall(tagID).execute()).body();
 	}
 
-	private void checkForError(Response<?> response) throws IOException {
+	public Call<String> getVersionCall() {
+		return wallabagApiService.getVersion();
+	}
+
+	public String getVersion() throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getVersionCall().execute()).body();
+	}
+
+	private <T> Response<T> checkResponse(Response<T> response) throws IOException, UnsuccessfulResponseException {
 		if(!response.isSuccessful()) {
-			// TODO: decent exception
-			throw new IllegalStateException("Response is unsuccessful; code: " + response.code()
-					+ ", body: " + response.errorBody().string());
+			throw new UnsuccessfulResponseException("Unsuccessful response",
+					response.code(), response.errorBody().string());
 		}
+
+		return response;
 	}
 
 	private void getAccessToken() throws IOException {

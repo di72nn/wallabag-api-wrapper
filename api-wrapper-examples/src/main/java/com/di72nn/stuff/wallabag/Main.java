@@ -2,6 +2,7 @@ package com.di72nn.stuff.wallabag;
 
 import com.di72nn.stuff.wallabag.apiwrapper.BasicParameterHandler;
 import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
+import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Entries;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
@@ -65,6 +66,9 @@ public class Main {
 				System.out.println("Created at: " + a.createdAt);
 			}
 		} catch(IOException e) {
+			e.printStackTrace();
+		} catch(UnsuccessfulResponseException e) {
+			System.out.println("Response code: " + e.getResponseCode() + ", body: " + e.getResponseBody());
 			e.printStackTrace();
 		}
 	}
