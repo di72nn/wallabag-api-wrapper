@@ -20,6 +20,7 @@ import java.util.*;
 
 import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonEmptyString;
 import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonEmptyCollection;
+import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonNegativeNumber;
 
 public class WallabagService {
 
@@ -249,9 +250,7 @@ public class WallabagService {
 		private Boolean archive;
 
 		private ModifyArticleBuilder(int id) {
-			if(id < 0) throw new IllegalArgumentException("ID is less then zero: " + id);
-
-			this.id = id;
+			this.id = nonNegativeNumber(id, "id");
 		}
 
 		public ModifyArticleBuilder title(String title) {
@@ -341,7 +340,10 @@ public class WallabagService {
 
 			Request originalRequest = chain.request();
 
-			Request request = setAuthHeader(originalRequest.newBuilder()).build();
+			// TODO: remove: temporary compatibility hack
+			Request.Builder builder = originalRequest.newBuilder().addHeader("Accept", "*/*");
+
+			Request request = setAuthHeader(builder).build();
 
 			okhttp3.Response response = chain.proceed(request);
 
@@ -421,11 +423,8 @@ public class WallabagService {
 		return checkResponse(addArticleCall(requestBody).execute()).body();
 	}
 
-	// throws 404 for unknown reason
 	public Call<Article> reloadArticleCall(int articleID) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
-
-		return wallabagApiService.reloadArticle(articleID);
+		return wallabagApiService.reloadArticle(nonNegativeNumber(articleID, "articleID"));
 	}
 
 	public Article reloadArticle(int articleID) throws IOException, UnsuccessfulResponseException {
@@ -455,9 +454,7 @@ public class WallabagService {
 	}
 
 	public Call<Article> deleteArticleCall(int articleID) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
-
-		return wallabagApiService.deleteArticle(articleID);
+		return wallabagApiService.deleteArticle(nonNegativeNumber(articleID, "articleID"));
 	}
 
 	public Article deleteArticle(int articleID) throws IOException, UnsuccessfulResponseException {
@@ -465,9 +462,7 @@ public class WallabagService {
 	}
 
 	public Call<Article> getArticleCall(int articleID) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
-
-		return wallabagApiService.getArticle(articleID);
+		return wallabagApiService.getArticle(nonNegativeNumber(articleID, "articleID"));
 	}
 
 	public Article getArticle(int articleID) throws IOException, UnsuccessfulResponseException {
@@ -475,9 +470,7 @@ public class WallabagService {
 	}
 
 	private Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
-
-		return wallabagApiService.modifyArticle(articleID, requestBody);
+		return wallabagApiService.modifyArticle(nonNegativeNumber(articleID, "articleID"), requestBody);
 	}
 
 	private Article modifyArticle(int articleID, RequestBody requestBody)
@@ -486,9 +479,7 @@ public class WallabagService {
 	}
 
 	public Call<List<Tag>> getTagsCall(int articleID) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
-
-		return wallabagApiService.getTags(articleID);
+		return wallabagApiService.getTags(nonNegativeNumber(articleID, "articleID"));
 	}
 
 	public List<Tag> getTags(int articleID) throws IOException, UnsuccessfulResponseException {
@@ -496,7 +487,7 @@ public class WallabagService {
 	}
 
 	public Call<Article> addTagsCall(int articleID, Collection<String> tags) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
+		nonNegativeNumber(articleID, "articleID");
 		nonEmptyCollection(tags, "tags");
 
 		return wallabagApiService.addTags(articleID, Utils.join(tags, ","));
@@ -507,8 +498,8 @@ public class WallabagService {
 	}
 
 	public Call<Article> deleteTagCall(int articleID, int tagID) {
-		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
-		if(tagID < 0) throw new IllegalArgumentException("tagID is less than zero: " + tagID);
+		nonNegativeNumber(articleID, "articleID");
+		nonNegativeNumber(tagID, "tagID");
 
 		return wallabagApiService.deleteTag(articleID, tagID);
 	}
@@ -535,13 +526,61 @@ public class WallabagService {
 	}
 
 	public Call<Tag> deleteTagCall(int tagID) {
-		if(tagID < 0) throw new IllegalArgumentException("tagID is less than zero: " + tagID);
-
-		return wallabagApiService.deleteTag(tagID);
+		return wallabagApiService.deleteTag(nonNegativeNumber(tagID, "tagID"));
 	}
 
 	public Tag deleteTag(int tagID) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(deleteTagCall(tagID).execute()).body();
+	}
+
+	public Call<Annotations> getAnnotationsCall(int articleID)  {
+		return wallabagApiService.getAnnotations(nonNegativeNumber(articleID, "articleID"));
+	}
+
+	public Annotations getAnnotations(int articleID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(getAnnotationsCall(articleID).execute()).body();
+	}
+
+	// TODO: turn into builder?
+	public Call<Annotation> addAnnotationCall(int articleID, List<Annotation.Range> ranges, String text, String quote) {
+		nonNegativeNumber(articleID, "articleID");
+		nonEmptyCollection(ranges, "ranges");
+		nonEmptyString(text, "text"); // TODO: check
+
+		// use object serialization instead?
+		Map<String, Object> parameters = new HashMap<>(3);
+		parameters.put("text", text);
+		if(quote != null) parameters.put("quote", quote);
+		parameters.put("ranges", ranges); // TODO: copy list?
+
+		return wallabagApiService.addAnnotation(articleID, parameters);
+	}
+
+	public Annotation addAnnotation(int articleID, List<Annotation.Range> ranges, String text, String quote)
+			throws IOException, UnsuccessfulResponseException {
+		return checkResponse(addAnnotationCall(articleID, ranges, text, quote).execute()).body();
+	}
+
+	public Call<Annotation> updateAnnotationCall(int articleID, String text) {
+		nonNegativeNumber(articleID, "articleID");
+		nonEmptyString(text, "text"); // TODO: check
+
+		Map<String, String> parameters = new HashMap<>(1);
+		parameters.put("text", text);
+
+		return wallabagApiService.updateAnnotation(articleID, parameters);
+	}
+
+	public Annotation updateAnnotation(int articleID, String text) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(updateAnnotationCall(articleID, text).execute()).body();
+	}
+
+	public Call<Annotation> deleteAnnotationCall(int annotationID) {
+		return wallabagApiService.deleteAnnotation(nonNegativeNumber(annotationID, "annotationID"));
+	}
+
+	public Annotation deleteAnnotation(int annotationID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteAnnotationCall(annotationID).execute()).body();
 	}
 
 	public Call<String> getVersionCall() {

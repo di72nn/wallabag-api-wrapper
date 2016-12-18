@@ -1,9 +1,6 @@
 package com.di72nn.stuff.wallabag.apiwrapper.services;
 
-import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Articles;
-import com.di72nn.stuff.wallabag.apiwrapper.models.ExistsResponse;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
+import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -48,14 +45,26 @@ public interface WallabagApiService {
 	@DELETE("api/entries/{entry}/tags/{tag}.json")
 	Call<Article> deleteTag(@Path("entry") int articleID, @Path("tag") int tagID);
 
-	@DELETE("/api/tag/label.json")
+	@DELETE("api/tag/label.json")
 	Call<Tag> deleteTag(@Query("tag") String tag);
 
-	@DELETE("/api/tags/{tag_id}.json")
+	@DELETE("api/tags/{tag_id}.json")
 	Call<Tag> deleteTag(@Path("tag_id") int tagID);
 
 	@GET("api/tags.json")
 	Call<List<Tag>> getTags();
+
+	@GET("api/annotations/{entry}.json")
+	Call<Annotations> getAnnotations(@Path("entry") int articleID);
+
+	@POST("api/annotations/{entry}.json")
+	Call<Annotation> addAnnotation(@Path("entry") int articleID, @Body Map<String, Object> body);
+
+	@PUT("api/annotations/{entry}.json")
+	Call<Annotation> updateAnnotation(@Path("entry") int articleID, @Body Map<String, String> body);
+
+	@DELETE("api/annotations/{annotation}.json")
+	Call<Annotation> deleteAnnotation(@Path("annotation") int annotationID);
 
 	@GET("api/version.json")
 	Call<String> getVersion();

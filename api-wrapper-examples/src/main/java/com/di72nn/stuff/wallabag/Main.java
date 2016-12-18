@@ -3,9 +3,7 @@ package com.di72nn.stuff.wallabag;
 import com.di72nn.stuff.wallabag.apiwrapper.BasicParameterHandler;
 import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Articles;
-import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
+import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,6 +35,8 @@ public class Main {
 					.tag("new_test_tag1").tag("new_test_tag2").tag("test_rm")
 					.title("Custom title test")
 					.execute();
+
+			System.out.println("Reloaded article is null: " + (service.reloadArticle(article.id) == null));
 
 			article = service.modifyArticleBuilder(article.id)
 					.title("Modified title for API documentation article").execute();
@@ -80,7 +80,24 @@ public class Main {
 
 			if(idForRemoval >= 0) System.out.println("Deleted tag label: " + service.deleteTag(idForRemoval).label);
 
-//			System.out.println("Reloaded article is null: " + (service.reloadArticle(article.id) == null));
+			Annotation.Range range = new Annotation.Range();
+			range.startOffset = 0;
+			range.endOffset = 100;
+			range.start = "/p[1]";
+			range.end = "/p[1]";
+			List<Annotation.Range> ranges = new ArrayList<>(1);
+			ranges.add(range);
+			Annotation annotation = service.addAnnotation(article.id, ranges, "Test annotation from API", null);
+
+			System.out.println("Updated annotation text: " + service.updateAnnotation(annotation.id, "Test updated annotation from API").text);
+
+			Annotations annotations = service.getAnnotations(article.id);
+			for(Annotation an: annotations.rows) {
+				System.out.println("Annotation id: " + an.id);
+				System.out.println("Annotation text: " + an.text);
+			}
+
+			System.out.println("Deleted annotation text: " + service.deleteAnnotation(annotation.id).text);
 
 			System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
 
