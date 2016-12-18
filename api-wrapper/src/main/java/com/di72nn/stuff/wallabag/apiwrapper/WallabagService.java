@@ -17,6 +17,9 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 import java.io.IOException;
 import java.util.*;
 
+import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonEmptyString;
+import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonEmptyCollection;
+
 public class WallabagService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WallabagService.class);
@@ -25,59 +28,43 @@ public class WallabagService {
 	private static final String GRANT_TYPE_PASSWORD = "password";
 	private static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
 
-	private final OkHttpClient okHttpClient;
 	private final WallabagApiService wallabagApiService;
 
+	private final ParameterHandler parameterHandler;
+
 	private final String apiBaseURL;
-	private final String clientID;
-	private final String clientSecret;
-	private final String username;
-	private final String password;
 
-	private String refreshToken;
-	private String accessToken;
+	public enum SortCriterion {
+		CREATED("created"), UPDATED("updated");
 
-	private TokenUpdateListener tokenUpdateListener;
+		private String value;
 
-	public interface TokenUpdateListener {
-		void tokenUpdated(TokenResponse token);
+		SortCriterion(String value) {
+			this.value = value;
+		}
+
+		public String apiValue() {
+			return value;
+		}
+
 	}
 
-	public static final class EntriesQueryBuilder {
+	public enum SortOrder {
+		ASCENDING("asc"), DESCENDING("desc");
 
-		public enum SortCriterion {
-			CREATED("created"), UPDATED("updated");
+		private String value;
 
-			private String value;
-
-			SortCriterion(String value) {
-				this.value = value;
-			}
-
-			@Override
-			public String toString() {
-				return value;
-			}
-
+		SortOrder(String value) {
+			this.value = value;
 		}
 
-		public enum SortOrder {
-			ASCENDING("asc"), DESCENDING("desc");
-
-			private String value;
-
-			SortOrder(String value) {
-				this.value = value;
-			}
-
-			@Override
-			public String toString() {
-				return value;
-			}
-
+		public String apiValue() {
+			return value;
 		}
 
-		private final WallabagService wallabagService;
+	}
+
+	public final class EntriesQueryBuilder {
 
 		private Boolean archive;
 		private Boolean starred;
@@ -88,9 +75,7 @@ public class WallabagService {
 		private Set<String> tags;
 		private long since = 0;
 
-		private EntriesQueryBuilder(WallabagService wallabagService) {
-			this.wallabagService = wallabagService;
-		}
+		private EntriesQueryBuilder() {}
 
 		public EntriesQueryBuilder archive(boolean archive) {
 			this.archive = archive;
@@ -124,9 +109,7 @@ public class WallabagService {
 
 		// TODO: reuse code
 		public EntriesQueryBuilder tag(String tag) {
-			if(tag == null || tag.isEmpty()) {
-				throw new IllegalArgumentException("Tag is empty or null");
-			}
+			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
 			if(tags == null) {
@@ -138,9 +121,7 @@ public class WallabagService {
 		}
 
 		public EntriesQueryBuilder tags(Collection<String> tags) {
-			if(tags == null || tags.isEmpty()) {
-				throw new IllegalArgumentException("Tags is empty or null");
-			}
+			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
 			if(tagsLocal == null) {
@@ -162,11 +143,10 @@ public class WallabagService {
 
 			if(archive != null) parameters.put("archive", Utils.booleanToNumberString(archive));
 			if(starred != null) parameters.put("starred", Utils.booleanToNumberString(starred));
-			parameters.put("sort", sortCriterion.toString());
-			parameters.put("order", sortOrder.toString());
+			parameters.put("sort", sortCriterion.apiValue());
+			parameters.put("order", sortOrder.apiValue());
 			parameters.put("page", String.valueOf(page));
 			parameters.put("perPage", String.valueOf(perPage));
-			// TODO: check that there is no need to URL-encode tags
 			if(tags != null && !tags.isEmpty()) {
 				parameters.put("tags", Utils.join(tags, ","));
 			}
@@ -176,40 +156,30 @@ public class WallabagService {
 		}
 
 		public Entries execute() throws IOException {
-			return wallabagService.getEntries(build());
+			return getEntries(build());
 		}
 
 	}
 
 	public class AddEntryBuilder {
 
-		private String url;
+		private final String url;
 		private String title;
 		private Set<String> tags;
 		private Boolean starred;
 		private Boolean archive;
 
-		private AddEntryBuilder() {}
-
-		// TODO: move to constructor?
-		public AddEntryBuilder url(String url) {
-			if(url == null || url.isEmpty()) {
-				throw new IllegalArgumentException("URL is empty or null");
-			}
-
-			this.url = url;
-			return this;
+		private AddEntryBuilder(String url) {
+			this.url = nonEmptyString(url, "url");
 		}
 
 		public AddEntryBuilder title(String title) {
-			this.title = title;
+			this.title = nonEmptyString(title, "title");
 			return this;
 		}
 
 		public AddEntryBuilder tag(String tag) {
-			if(tag == null || tag.isEmpty()) {
-				throw new IllegalArgumentException("Tag is empty or null");
-			}
+			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
 			if(tags == null) {
@@ -221,9 +191,7 @@ public class WallabagService {
 		}
 
 		public AddEntryBuilder tags(Collection<String> tags) {
-			if(tags == null || tags.isEmpty()) {
-				throw new IllegalArgumentException("Tags is empty or null");
-			}
+			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
 			if(tagsLocal == null) {
@@ -246,10 +214,6 @@ public class WallabagService {
 
 		// TODO: make package-private?
 		public RequestBody build() {
-			if(url == null || url.isEmpty()) {
-				throw new IllegalArgumentException("URL can't be empty or null");
-			}
-
 			FormBody.Builder bodyBuilder = new FormBody.Builder()
 					.add("url", url);
 
@@ -284,14 +248,12 @@ public class WallabagService {
 		}
 
 		public ModifyEntryBuilder title(String title) {
-			this.title = title;
+			this.title = nonEmptyString(title, "title");
 			return this;
 		}
 
 		public ModifyEntryBuilder tag(String tag) {
-			if(tag == null || tag.isEmpty()) {
-				throw new IllegalArgumentException("Tag is empty or null");
-			}
+			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
 			if(tags == null) {
@@ -303,9 +265,7 @@ public class WallabagService {
 		}
 
 		public ModifyEntryBuilder tags(Collection<String> tags) {
-			if(tags == null || tags.isEmpty()) {
-				throw new IllegalArgumentException("Tags is empty or null");
-			}
+			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
 			if(tagsLocal == null) {
@@ -330,12 +290,28 @@ public class WallabagService {
 		public RequestBody build() {
 			FormBody.Builder bodyBuilder = new FormBody.Builder();
 
-			if(title != null) bodyBuilder.add("title", title);
+			boolean changed = false;
+
+			if(title != null) {
+				bodyBuilder.add("title", title);
+				changed = true;
+			}
 			if(tags != null && !tags.isEmpty()) {
 				bodyBuilder.add("tags", Utils.join(tags, ","));
+				changed = true;
 			}
-			if(archive != null) bodyBuilder.add("archive", Utils.booleanToNumberString(archive));
-			if(starred != null) bodyBuilder.add("starred", Utils.booleanToNumberString(starred));
+			if(archive != null) {
+				bodyBuilder.add("archive", Utils.booleanToNumberString(archive));
+				changed = true;
+			}
+			if(starred != null) {
+				bodyBuilder.add("starred", Utils.booleanToNumberString(starred));
+				changed = true;
+			}
+
+			if(!changed) {
+				throw new IllegalStateException("No changes done");
+			}
 
 			return bodyBuilder.build();
 		}
@@ -376,20 +352,16 @@ public class WallabagService {
 
 	}
 
-	public WallabagService(String apiBaseURL, String clientID, String clientSecret, String username, String password) {
-		checkString(apiBaseURL, "apiBaseURL");
-		checkString(clientID, "clientID");
-		checkString(clientSecret, "clientSecret");
-		checkString(username, "username");
-		checkString(password, "password");
+	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler) {
+		nonEmptyString(apiBaseURL, "apiBaseURL");
+		if(parameterHandler == null) {
+			throw new NullPointerException("parameterHandler is null");
+		}
 
 		this.apiBaseURL = apiBaseURL;
-		this.clientID = clientID;
-		this.clientSecret = clientSecret;
-		this.username = username;
-		this.password = password;
+		this.parameterHandler = parameterHandler;
 
-		okHttpClient = new OkHttpClient.Builder()
+		OkHttpClient okHttpClient = new OkHttpClient.Builder()
 				.addInterceptor(new TokenRefreshingInterceptor()).build();
 
 		Retrofit retrofit = new Retrofit.Builder()
@@ -405,24 +377,12 @@ public class WallabagService {
 		wallabagApiService = retrofit.create(WallabagApiService.class);
 	}
 
-	public void setRefreshToken(String refreshToken) {
-		this.refreshToken = refreshToken;
-	}
-
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
-	}
-
-	public void setTokenUpdateListener(TokenUpdateListener tokenUpdateListener) {
-		this.tokenUpdateListener = tokenUpdateListener;
-	}
-
 	public EntriesQueryBuilder getEntriesBuilder() {
-		return new EntriesQueryBuilder(this);
+		return new EntriesQueryBuilder();
 	}
 
-	public AddEntryBuilder addEntryBuilder() {
-		return new AddEntryBuilder();
+	public AddEntryBuilder addEntryBuilder(String url) {
+		return new AddEntryBuilder(url);
 	}
 
 	public ModifyEntryBuilder modifyEntryBuilder(int id) {
@@ -449,7 +409,7 @@ public class WallabagService {
 	}
 
 	public boolean entryExists(String url) throws IOException {
-		checkString(url, "URL");
+		nonEmptyString(url, "URL");
 
 		Response<ExistsResponse> response = wallabagApiService.exists(url).execute();
 
@@ -513,7 +473,7 @@ public class WallabagService {
 	}
 
 	public Tag deleteTag(String tagLabel) throws IOException {
-		checkString(tagLabel, "tagLabel");
+		nonEmptyString(tagLabel, "tagLabel");
 
 		Response<Tag> response = wallabagApiService.deleteTag(tagLabel).execute();
 
@@ -554,10 +514,8 @@ public class WallabagService {
 	private void getAccessToken() throws IOException {
 		LOG.info("Access token requested");
 
-		if(refreshToken != null && !refreshToken.isEmpty()) {
-			LOG.info("Refreshing token");
-			if(getAccessToken(true) != null) return;
-		}
+		LOG.info("Refreshing token");
+		if(getAccessToken(true) != null) return;
 
 		LOG.info("Requesting new token");
 		if(getAccessToken(false) == null) {
@@ -568,17 +526,24 @@ public class WallabagService {
 	private TokenResponse getAccessToken(boolean refresh) throws IOException {
 		LOG.info("started");
 
+		// TODO: check values from parameterHandler?
+
 		FormBody.Builder bodyBuilder = new FormBody.Builder()
-				.add("client_id", clientID)
-				.add("client_secret", clientSecret);
+				.add("client_id", parameterHandler.getClientID())
+				.add("client_secret", parameterHandler.getClientSecret());
 
 		if(refresh) {
+			String refreshToken = parameterHandler.getRefreshToken();
+			if(refreshToken == null || refreshToken.isEmpty()) {
+				LOG.debug("Refresh token is empty or null");
+				return null;
+			}
 			bodyBuilder.add("grant_type", GRANT_TYPE_REFRESH_TOKEN)
 					.add("refresh_token", refreshToken);
 		} else {
 			bodyBuilder.add("grant_type", GRANT_TYPE_PASSWORD)
-					.add("username", username)
-					.add("password", password);
+					.add("username", parameterHandler.getUsername())
+					.add("password", parameterHandler.getPassword());
 		}
 		RequestBody body = bodyBuilder.build();
 
@@ -594,25 +559,19 @@ public class WallabagService {
 		// TODO: handle errors
 		if(!response.isSuccessful()) {
 			if(response.code() == 400) {
+				LOG.debug("response code: " + response.code() + ", body: " + response.errorBody().string());
 				return null;
 			} else {
 				// TODO: decent exception
-				throw new IllegalStateException("Response is unsuccessful; code: " + response.code());
+				throw new IllegalStateException("Response is unsuccessful; code: " + response.code()
+						+ ", body: " + response.errorBody().string());
 			}
 		}
 
 		TokenResponse tokenResponse = response.body();
 		LOG.info("Got token: " + tokenResponse); // TODO: remove: sensitive
-		accessToken = tokenResponse.accessToken;
-		if(tokenResponse.refreshToken != null) refreshToken = tokenResponse.refreshToken;
 
-		if(tokenUpdateListener != null) {
-			try {
-				tokenUpdateListener.tokenUpdated(tokenResponse);
-			} catch(Exception e) {
-				LOG.error("tokenUpdateListener exception", e);
-			}
-		}
+		parameterHandler.tokensUpdated(tokenResponse);
 
 		LOG.info("finished");
 
@@ -620,13 +579,7 @@ public class WallabagService {
 	}
 
 	private Request.Builder setAuthHeader(Request.Builder requestBuilder) {
-		return requestBuilder.addHeader("Authorization", "Bearer " + accessToken);
-	}
-
-	private static void checkString(String value, String name) {
-		if(value == null || value.isEmpty()) {
-			throw new IllegalArgumentException(name + " is empty or null");
-		}
+		return requestBuilder.addHeader("Authorization", "Bearer " + parameterHandler.getAccessToken());
 	}
 
 }

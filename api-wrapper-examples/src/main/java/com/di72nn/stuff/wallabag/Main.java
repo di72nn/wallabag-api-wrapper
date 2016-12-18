@@ -1,5 +1,6 @@
 package com.di72nn.stuff.wallabag;
 
+import com.di72nn.stuff.wallabag.apiwrapper.BasicParameterHandler;
 import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Entries;
@@ -22,12 +23,13 @@ public class Main {
 		String refreshToken = "";
 		String accessToken = "";
 
-		WallabagService service = new WallabagService(baseUrl, clientID, clientSecret, username, password);
-		service.setRefreshToken(refreshToken);
-		service.setAccessToken(accessToken);
+		WallabagService service = new WallabagService(baseUrl, new BasicParameterHandler(
+				username, password, clientID, clientSecret, refreshToken, accessToken));
 
 		try {
-			Article article = service.addEntryBuilder().url("http://doc.wallabag.org/en/master/developer/api.html")
+			System.out.println("Server version: " + service.getVersion());
+
+			Article article = service.addEntryBuilder("http://doc.wallabag.org/en/master/developer/api.html")
 					.starred(true)
 					.tag("new_test_tag1").tag("new_test_tag2").tag("test_rm")
 					.title("Custom title test")
@@ -41,8 +43,6 @@ public class Main {
 
 			System.out.println("Article title: " + service.getEntry(article.id).title);
 
-//			System.out.println("Deleted article title: " + service.deleteEntry(article.id).title);
-
 			List<Tag> tags = service.getTags();
 			int idForRemoval = -1;
 			for(Tag tag: tags) {
@@ -53,7 +53,7 @@ public class Main {
 
 			if(idForRemoval >= 0) System.out.println("Deleted tag label: " + service.deleteTag(idForRemoval).label);
 
-			System.out.println("Version: " + service.getVersion());
+			System.out.println("Deleted article title: " + service.deleteEntry(article.id).title);
 
 			Entries entries = service.getEntriesBuilder().perPage(3).execute();
 			System.out.println("Items length: " + entries.embedded.items.size());

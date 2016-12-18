@@ -1,10 +1,31 @@
 package com.di72nn.stuff.wallabag.apiwrapper;
 
+import java.util.Collection;
 import java.util.Iterator;
 
-public class Utils {
+class Utils {
 
-	public static String join(Iterable<? extends CharSequence> iterable, String delimeter) {
+	static String nonEmptyString(String value, String name) {
+		if(value == null) throw new NullPointerException(name + "is null");
+		if(value.isEmpty()) throw new IllegalArgumentException(name + " is empty");
+
+		return value;
+	}
+
+	static <T> Collection<T> nonEmptyCollection(Collection<T> value, String name) {
+		if(value == null) throw new NullPointerException(name + "is null");
+		if(value.isEmpty()) throw new IllegalArgumentException(name + " is empty");
+
+		return value;
+	}
+
+	static <T> T nonNullValue(T value, String name) {
+		if(value == null) throw new NullPointerException(name + " is null");
+
+		return value;
+	}
+
+	static String join(Iterable<? extends CharSequence> iterable, String delimeter) {
 		Iterator<? extends CharSequence> it = iterable.iterator();
 		if(!it.hasNext()) return "";
 
@@ -16,7 +37,7 @@ public class Utils {
 		return sb.toString();
 	}
 
-	public static String booleanToNumberString(boolean value) {
+	static String booleanToNumberString(boolean value) {
 		return String.valueOf(value ? 1 : 0);
 	}
 
