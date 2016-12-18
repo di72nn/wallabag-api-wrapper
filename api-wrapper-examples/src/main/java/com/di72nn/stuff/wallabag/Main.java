@@ -8,7 +8,9 @@ import com.di72nn.stuff.wallabag.apiwrapper.models.Articles;
 import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Main {
 
@@ -42,7 +44,31 @@ public class Main {
 
 			System.out.println("Exists: " + service.articleExists("http://doc.wallabag.org/en/master/developer/api.html"));
 
+			List<String> urls = new ArrayList<String>();
+			urls.add("http://doc.wallabag.org/en/master/developer/api.html");
+			urls.add("http://google.com");
+			for(Map.Entry<String, Boolean> entry: service.articlesExist(urls).entrySet()) {
+				System.out.println("URL: " + entry.getKey() + ", exists: " + entry.getValue());
+			}
+
 			System.out.println("Article title: " + service.getArticle(article.id).title);
+
+			List<String> additionalTags = new ArrayList<>();
+			additionalTags.add("additional_tag1");
+			additionalTags.add("additional_tag2");
+			additionalTags.add("additional_tag3");
+			article = service.addTags(article.id, additionalTags);
+
+			int tagIdForRemoval = -1;
+			for(Tag tag: article.tags) {
+				if("additional_tag2".equals(tag.label)) {
+					tagIdForRemoval = tag.id;
+					break;
+				}
+			}
+
+			if(tagIdForRemoval >= 0) System.out.println("Deleted tag from article: "
+					+ service.deleteTag(article.id, tagIdForRemoval).title);
 
 			List<Tag> tags = service.getTags();
 			int idForRemoval = -1;
@@ -53,6 +79,8 @@ public class Main {
 			}
 
 			if(idForRemoval >= 0) System.out.println("Deleted tag label: " + service.deleteTag(idForRemoval).label);
+
+//			System.out.println("Reloaded article is null: " + (service.reloadArticle(article.id) == null));
 
 			System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
 

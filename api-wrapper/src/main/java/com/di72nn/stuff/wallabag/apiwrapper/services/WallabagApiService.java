@@ -8,6 +8,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +20,14 @@ public interface WallabagApiService {
 	@POST("api/entries.json")
 	Call<Article> addArticle(@Body RequestBody requestBody);
 
+	@PATCH("api/entries/{entry}/reload.json")
+	Call<Article> reloadArticle(@Path("entry") int articleID);
+
 	@GET("api/entries/exists.json")
 	Call<ExistsResponse> exists(@Query("url") String url);
+
+	@GET("api/entries/exists.json")
+	Call<Map<String, Boolean>> exists(@Query("urls[]") Collection<String> urls);
 
 	@DELETE("api/entries/{entry}.json")
 	Call<Article> deleteArticle(@Path("entry") int articleID);
@@ -33,6 +40,13 @@ public interface WallabagApiService {
 
 	@GET("api/entries/{entry}/tags.json")
 	Call<List<Tag>> getTags(@Path("entry") int articleID);
+
+	@FormUrlEncoded
+	@POST("api/entries/{entry}/tags.json")
+	Call<Article> addTags(@Path("entry") int articleID, @Field("tags") String tags);
+
+	@DELETE("api/entries/{entry}/tags/{tag}.json")
+	Call<Article> deleteTag(@Path("entry") int articleID, @Path("tag") int tagID);
 
 	@DELETE("/api/tag/label.json")
 	Call<Tag> deleteTag(@Query("tag") String tag);

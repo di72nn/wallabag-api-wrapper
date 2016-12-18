@@ -421,12 +421,37 @@ public class WallabagService {
 		return checkResponse(addArticleCall(requestBody).execute()).body();
 	}
 
+	// throws 404 for unknown reason
+	public Call<Article> reloadArticleCall(int articleID) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
+
+		return wallabagApiService.reloadArticle(articleID);
+	}
+
+	public Article reloadArticle(int articleID) throws IOException, UnsuccessfulResponseException {
+		Response<Article> response = reloadArticleCall(articleID).execute();
+
+		if(response.code() == 304) { // couldn't update
+			return null;
+		}
+
+		return checkResponse(response).body();
+	}
+
 	public Call<ExistsResponse> articleExistsCall(String url) {
 		return wallabagApiService.exists(nonEmptyString(url, "URL"));
 	}
 
 	public boolean articleExists(String url) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(articleExistsCall(url).execute()).body().exists;
+	}
+
+	public Call<Map<String, Boolean>> articlesExistCall(Collection<String> urls) {
+		return wallabagApiService.exists(new HashSet<>(nonEmptyCollection(urls, "urls")));
+	}
+
+	public Map<String, Boolean> articlesExist(Collection<String> urls) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(articlesExistCall(urls).execute()).body();
 	}
 
 	public Call<Article> deleteArticleCall(int articleID) {
@@ -468,6 +493,28 @@ public class WallabagService {
 
 	public List<Tag> getTags(int articleID) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(getTagsCall(articleID).execute()).body();
+	}
+
+	public Call<Article> addTagsCall(int articleID, Collection<String> tags) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
+		nonEmptyCollection(tags, "tags");
+
+		return wallabagApiService.addTags(articleID, Utils.join(tags, ","));
+	}
+
+	public Article addTags(int articleID, Collection<String> tags) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(addTagsCall(articleID, tags).execute()).body();
+	}
+
+	public Call<Article> deleteTagCall(int articleID, int tagID) {
+		if(articleID < 0) throw new IllegalArgumentException("articleID is less than zero: " + articleID);
+		if(tagID < 0) throw new IllegalArgumentException("tagID is less than zero: " + tagID);
+
+		return wallabagApiService.deleteTag(articleID, tagID);
+	}
+
+	public Article deleteTag(int articleID, int tagID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteTagCall(articleID, tagID).execute()).body();
 	}
 
 	public Call<List<Tag>> getTagsCall() {
