@@ -1,6 +1,8 @@
 package com.di72nn.stuff.wallabag.apiwrapper;
 
 import com.di72nn.stuff.wallabag.apiwrapper.adapters.NumericBooleanAdapter;
+import com.di72nn.stuff.wallabag.apiwrapper.exceptions.AuthorizationException;
+import com.di72nn.stuff.wallabag.apiwrapper.exceptions.NotFoundException;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagApiService;
@@ -593,8 +595,20 @@ public class WallabagService {
 
 	private <T> Response<T> checkResponse(Response<T> response) throws IOException, UnsuccessfulResponseException {
 		if(!response.isSuccessful()) {
-			throw new UnsuccessfulResponseException("Unsuccessful response",
-					response.code(), response.errorBody().string());
+			switch(response.code()) {
+				case 400:
+				case 401:
+					throw new AuthorizationException(
+							response.code(), response.message(), response.errorBody().string());
+
+				case 404:
+					throw new NotFoundException(
+							response.code(), response.message(), response.errorBody().string());
+
+				default:
+					throw new UnsuccessfulResponseException(
+							response.code(), response.message(), response.errorBody().string());
+			}
 		}
 
 		return response;
