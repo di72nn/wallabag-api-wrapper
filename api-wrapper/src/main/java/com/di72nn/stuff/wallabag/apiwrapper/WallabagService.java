@@ -449,6 +449,11 @@ public class WallabagService {
 	}
 
 	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler) {
+		this(apiBaseURL, parameterHandler, null);
+	}
+
+	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler,
+						   OkHttpClient.Builder okHttpClientBuilder) {
 		nonEmptyString(apiBaseURL, "apiBaseURL");
 		if(parameterHandler == null) {
 			throw new NullPointerException("parameterHandler is null");
@@ -457,7 +462,8 @@ public class WallabagService {
 		this.apiBaseURL = apiBaseURL;
 		this.parameterHandler = parameterHandler;
 
-		OkHttpClient okHttpClient = new OkHttpClient.Builder()
+		if(okHttpClientBuilder == null) okHttpClientBuilder = new OkHttpClient.Builder();
+		OkHttpClient okHttpClient = okHttpClientBuilder
 				.addInterceptor(new TokenRefreshingInterceptor()).build();
 
 		Retrofit retrofit = new Retrofit.Builder()
