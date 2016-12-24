@@ -358,7 +358,8 @@ public class WallabagService {
 
 					getAccessToken();
 
-					request = setAuthHeader(originalRequest.newBuilder()).build();
+					// TODO: remove: temporary compatibility hack
+					request = setAuthHeader(originalRequest.newBuilder().addHeader("Accept", "*/*")).build();
 					response = chain.proceed(request);
 				}
 			}
