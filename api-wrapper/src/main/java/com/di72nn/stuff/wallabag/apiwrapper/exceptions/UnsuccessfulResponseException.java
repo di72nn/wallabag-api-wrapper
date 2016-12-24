@@ -7,7 +7,7 @@ public class UnsuccessfulResponseException extends Exception {
 	private String responseBody;
 
 	public UnsuccessfulResponseException(int responseCode, String responseMessage, String responseBody) {
-		super("HTTP response" + responseCode + " " + responseMessage);
+		super("HTTP response: " + responseCode + " " + responseMessage);
 		this.responseCode = responseCode;
 		this.responseMessage = responseMessage;
 		this.responseBody = responseBody;

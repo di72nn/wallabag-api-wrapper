@@ -20,9 +20,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 import java.io.IOException;
 import java.util.*;
 
-import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonEmptyString;
-import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonEmptyCollection;
-import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonNegativeNumber;
+import static com.di72nn.stuff.wallabag.apiwrapper.Utils.*;
 
 public class WallabagService {
 
@@ -102,12 +100,12 @@ public class WallabagService {
 		}
 
 		public ArticlesQueryBuilder page(int page) {
-			this.page = page;
+			this.page = positiveNumber(page, "page");
 			return this;
 		}
 
 		public ArticlesQueryBuilder perPage(int perPage) {
-			this.perPage = perPage;
+			this.perPage = positiveNumber(perPage, "perPage");
 			return this;
 		}
 
@@ -164,6 +162,29 @@ public class WallabagService {
 
 		public Articles execute() throws IOException, UnsuccessfulResponseException {
 			return getArticles(build());
+		}
+
+		public ArticlesPageIterator pageIterator() {
+			return pageIterator(true);
+		}
+
+		public ArticlesPageIterator pageIterator(boolean notFoundAsEmpty) {
+			return new ArticlesPageIterator(copy(), notFoundAsEmpty);
+		}
+
+		private ArticlesQueryBuilder copy() {
+			ArticlesQueryBuilder copy = new ArticlesQueryBuilder();
+
+			copy.archive = archive;
+			copy.starred = starred;
+			copy.sortCriterion = sortCriterion;
+			copy.sortOrder = sortOrder;
+			copy.page = page;
+			copy.perPage = perPage;
+			copy.tags = tags; // no need to create new collection?
+			copy.since = since;
+
+			return copy;
 		}
 
 	}
@@ -329,6 +350,64 @@ public class WallabagService {
 
 		public Article execute() throws IOException, UnsuccessfulResponseException {
 			return modifyArticle(id, build());
+		}
+
+	}
+
+	public static class ArticlesPageIterator {
+
+		private static final Logger LOG = LoggerFactory.getLogger(ArticlesPageIterator.class);
+
+		private final ArticlesQueryBuilder queryBuilder;
+		private final boolean notFoundAsEmpty;
+
+		private int currentPage = 1;
+
+		private Articles articles;
+		private boolean ready;
+		private boolean lastPageReached;
+
+		private ArticlesPageIterator(ArticlesQueryBuilder articlesQueryBuilder, boolean notFoundAsEmpty) {
+			this.queryBuilder = articlesQueryBuilder;
+			this.notFoundAsEmpty = notFoundAsEmpty;
+		}
+
+		public boolean hasNext() throws IOException, UnsuccessfulResponseException {
+			if(ready) return true;
+			if(lastPageReached) return false;
+
+			Articles articles;
+			try {
+				articles = queryBuilder.page(currentPage++).execute();
+			} catch(NotFoundException nfe) {
+				if(!notFoundAsEmpty) {
+					throw nfe;
+				}
+
+				LOG.debug("Handling NFE as empty", nfe);
+				articles = null;
+			}
+
+			this.articles = articles;
+
+			if(articles != null) {
+				LOG.trace("Page: {}/{}, total articles: {}", articles.page, articles.pages, articles.total);
+
+				ready = true;
+				if(articles.page == articles.pages) lastPageReached = true;
+			} else {
+				LOG.trace("articles == null");
+			}
+
+			ready = articles != null;
+			return ready;
+		}
+
+		public Articles next() throws IOException, UnsuccessfulResponseException {
+			if(!hasNext()) throw new NoSuchElementException();
+
+			ready = false;
+			return articles;
 		}
 
 	}

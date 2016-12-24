@@ -31,6 +31,12 @@ class Utils {
 		return value;
 	}
 
+	static int positiveNumber(int value, String name) {
+		if(value <= 0) throw new IllegalArgumentException(name + " is not positive: " + value);
+
+		return value;
+	}
+
 	static String join(Iterable<? extends CharSequence> iterable, String delimeter) {
 		Iterator<? extends CharSequence> it = iterable.iterator();
 		if(!it.hasNext()) return "";
