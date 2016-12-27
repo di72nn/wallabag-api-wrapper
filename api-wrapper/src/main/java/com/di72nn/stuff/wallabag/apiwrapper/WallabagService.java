@@ -36,6 +36,15 @@ public class WallabagService {
 
 	private final String apiBaseURL;
 
+	public enum ResponseFormat {
+		XML, JSON, TXT, CSV, PDF, EPUB, MOBI, HTML;
+
+		public String apiValue() {
+			return toString().toLowerCase();
+		}
+
+	}
+
 	public enum SortCriterion {
 		CREATED("created"), UPDATED("updated");
 
@@ -555,6 +564,23 @@ public class WallabagService {
 
 	public Article getArticle(int articleID) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(getArticleCall(articleID).execute()).body();
+	}
+
+	public Call<ResponseBody> exportArticleCall(int articleID, ResponseFormat format) {
+		nonNegativeNumber(articleID, "articleID");
+		nonNullValue(format, "format");
+
+		return wallabagApiService.exportArticle(articleID, format.apiValue());
+	}
+
+	public Response<ResponseBody> exportArticleRaw(int articleID, ResponseFormat format)
+			throws IOException, UnsuccessfulResponseException {
+		return checkResponse(exportArticleCall(articleID, format).execute());
+	}
+
+	public ResponseBody exportArticle(int articleID, ResponseFormat format)
+			throws IOException, UnsuccessfulResponseException {
+		return exportArticleRaw(articleID, format).body();
 	}
 
 	private Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {

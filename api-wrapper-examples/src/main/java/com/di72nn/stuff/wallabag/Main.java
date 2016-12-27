@@ -38,6 +38,9 @@ public class Main {
 
 			System.out.println("Reloaded article is null: " + (service.reloadArticle(article.id) == null));
 
+			System.out.println("Exported as text:" + service.exportArticle(
+					article.id, WallabagService.ResponseFormat.TXT).string());
+
 			article = service.modifyArticleBuilder(article.id)
 					.title("Modified title for API documentation article").execute();
 			System.out.println("Modified article title: " + article.title);

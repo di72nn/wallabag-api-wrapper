@@ -2,6 +2,7 @@ package com.di72nn.stuff.wallabag.apiwrapper.services;
 
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -31,6 +32,10 @@ public interface WallabagApiService {
 
 	@GET("api/entries/{entry}.json")
 	Call<Article> getArticle(@Path("entry") int articleID);
+
+	@Streaming
+	@GET("/api/entries/{entry}/export.{format}")
+	Call<ResponseBody> exportArticle(@Path("entry") int articleID, @Path("format") String format);
 
 	@PATCH("api/entries/{entry}.json")
 	Call<Article> modifyArticle(@Path("entry") int articleID, @Body RequestBody requestBody);
