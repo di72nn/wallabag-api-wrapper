@@ -30,6 +30,7 @@ public class WallabagService {
 	private static final String GRANT_TYPE_PASSWORD = "password";
 	private static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
 
+	private final WallabagAuthService wallabagAuthService; // TODO: lazy init?
 	private final WallabagApiService wallabagApiService;
 
 	private final ParameterHandler parameterHandler;
@@ -461,8 +462,7 @@ public class WallabagService {
 		this(apiBaseURL, parameterHandler, null);
 	}
 
-	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler,
-						   OkHttpClient.Builder okHttpClientBuilder) {
+	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler, OkHttpClient okHttpClient) {
 		nonEmptyString(apiBaseURL, "apiBaseURL");
 		if(parameterHandler == null) {
 			throw new NullPointerException("parameterHandler is null");
@@ -471,11 +471,18 @@ public class WallabagService {
 		this.apiBaseURL = apiBaseURL;
 		this.parameterHandler = parameterHandler;
 
-		if(okHttpClientBuilder == null) okHttpClientBuilder = new OkHttpClient.Builder();
-		OkHttpClient okHttpClient = okHttpClientBuilder
-				.addInterceptor(new TokenRefreshingInterceptor()).build();
+		if(okHttpClient == null) okHttpClient = new OkHttpClient();
 
-		Retrofit retrofit = new Retrofit.Builder()
+		wallabagAuthService = new Retrofit.Builder()
+				.addConverterFactory(MoshiConverterFactory.create())
+				.client(okHttpClient)
+				.baseUrl(apiBaseURL)
+				.build()
+				.create(WallabagAuthService.class);
+
+		okHttpClient = okHttpClient.newBuilder().addInterceptor(new TokenRefreshingInterceptor()).build();
+
+		wallabagApiService = new Retrofit.Builder()
 				.addConverterFactory(MoshiConverterFactory.create(
 						new Moshi.Builder()
 								.add(new NumericBooleanAdapter())
@@ -483,9 +490,8 @@ public class WallabagService {
 								.build()))
 				.client(okHttpClient)
 				.baseUrl(apiBaseURL)
-				.build();
-
-		wallabagApiService = retrofit.create(WallabagApiService.class);
+				.build()
+				.create(WallabagApiService.class);
 	}
 
 	public ArticlesQueryBuilder getArticlesBuilder() {
@@ -762,12 +768,6 @@ public class WallabagService {
 		}
 		RequestBody body = bodyBuilder.build();
 
-		Retrofit retrofit = new Retrofit.Builder()
-				.addConverterFactory(MoshiConverterFactory.create())
-				.baseUrl(apiBaseURL)
-				.build();
-
-		WallabagAuthService wallabagAuthService = retrofit.create(WallabagAuthService.class);
 		Call<TokenResponse> tokenResponseCall = wallabagAuthService.token(body);
 		Response<TokenResponse> response = tokenResponseCall.execute();
 
