@@ -37,13 +37,13 @@ class Utils {
 		return value;
 	}
 
-	static String join(Iterable<? extends CharSequence> iterable, String delimeter) {
+	static String join(Iterable<? extends CharSequence> iterable, String delimiter) {
 		Iterator<? extends CharSequence> it = iterable.iterator();
 		if(!it.hasNext()) return "";
 
 		StringBuilder sb = new StringBuilder(it.next());
 		while(it.hasNext()) {
-			sb.append(delimeter).append(it.next());
+			sb.append(delimiter).append(it.next());
 		}
 
 		return sb.toString();
