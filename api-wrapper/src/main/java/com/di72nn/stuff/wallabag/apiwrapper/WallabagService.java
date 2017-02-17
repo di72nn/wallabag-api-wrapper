@@ -747,11 +747,9 @@ public class WallabagService {
 	private TokenResponse getAccessToken(boolean refresh) throws IOException {
 		LOG.info("started");
 
-		// TODO: check values from parameterHandler?
-
 		FormBody.Builder bodyBuilder = new FormBody.Builder()
-				.add("client_id", parameterHandler.getClientID())
-				.add("client_secret", parameterHandler.getClientSecret());
+				.add("client_id", nonNullValue(parameterHandler.getClientID(), "clientID"))
+				.add("client_secret", nonNullValue(parameterHandler.getClientSecret(), "clientSecret"));
 
 		if(refresh) {
 			String refreshToken = parameterHandler.getRefreshToken();
@@ -763,8 +761,8 @@ public class WallabagService {
 					.add("refresh_token", refreshToken);
 		} else {
 			bodyBuilder.add("grant_type", GRANT_TYPE_PASSWORD)
-					.add("username", parameterHandler.getUsername())
-					.add("password", parameterHandler.getPassword());
+					.add("username", nonNullValue(parameterHandler.getUsername(), "username"))
+					.add("password", nonNullValue(parameterHandler.getPassword(), "password"));
 		}
 		RequestBody body = bodyBuilder.build();
 
