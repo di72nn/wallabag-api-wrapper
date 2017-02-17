@@ -364,6 +364,54 @@ public class WallabagService {
 
 	}
 
+	public class BatchExistQueryBuilder {
+
+		private int maxQueryLength;
+
+		private final HttpUrl.Builder builder = HttpUrl.parse("https://a").newBuilder();
+
+		private final List<String> urls = new ArrayList<>();
+		private int currentRequestLength;
+
+		private BatchExistQueryBuilder() {
+			this(3990);
+		}
+
+		private BatchExistQueryBuilder(int maxQueryLength) {
+			this.maxQueryLength = maxQueryLength;
+
+			reset();
+		}
+
+		public void reset() {
+			urls.clear();
+			currentRequestLength = apiBaseURL.length() + "/api/entries/exists.json".length();
+		}
+
+		public boolean addUrl(String url) {
+			nonNullValue(url, "url");
+
+			int parameterLength = builder.setQueryParameter("urls[]", url).build().encodedQuery().length() + 1;
+			if(currentRequestLength + parameterLength <= maxQueryLength) {
+				urls.add(url);
+				currentRequestLength += parameterLength;
+
+				return true;
+			}
+
+			return false;
+		}
+
+		public Call<Map<String, Boolean>> buildCall() {
+			return articlesExistCall(urls);
+		}
+
+		public Map<String, Boolean> execute() throws IOException, UnsuccessfulResponseException {
+			return articlesExist(urls);
+		}
+
+	}
+
 	public static class ArticlesPageIterator {
 
 		private static final Logger LOG = LoggerFactory.getLogger(ArticlesPageIterator.class);
@@ -554,6 +602,14 @@ public class WallabagService {
 
 	public Map<String, Boolean> articlesExist(Collection<String> urls) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(articlesExistCall(urls).execute()).body();
+	}
+
+	public BatchExistQueryBuilder getArticlesExistQueryBuilder() {
+		return new BatchExistQueryBuilder();
+	}
+
+	public BatchExistQueryBuilder getArticlesExistQueryBuilder(int maxQueryLength) {
+		return new BatchExistQueryBuilder(maxQueryLength);
 	}
 
 	public Call<Article> deleteArticleCall(int articleID) {
