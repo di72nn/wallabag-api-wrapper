@@ -479,11 +479,7 @@ public class WallabagService {
 
 			Request originalRequest = chain.request();
 
-			// TODO: remove: temporary compatibility hack
-			Request.Builder builder = originalRequest.newBuilder().addHeader("Accept", "*/*");
-
-			Request request = setAuthHeader(builder).build();
-
+			Request request = setHeaders(originalRequest.newBuilder()).build();
 			okhttp3.Response response = chain.proceed(request);
 
 			LOG.debug("intercept() got response");
@@ -495,8 +491,7 @@ public class WallabagService {
 
 					getAccessToken();
 
-					// TODO: remove: temporary compatibility hack
-					request = setAuthHeader(originalRequest.newBuilder().addHeader("Accept", "*/*")).build();
+					request = setHeaders(originalRequest.newBuilder()).build();
 					response = chain.proceed(request);
 				}
 			}
@@ -845,6 +840,12 @@ public class WallabagService {
 		LOG.info("finished");
 
 		return tokenResponse;
+	}
+
+	private Request.Builder setHeaders(Request.Builder requestBuilder) {
+		requestBuilder.addHeader("Accept", "*/*"); // compatibility
+
+		return setAuthHeader(requestBuilder);
 	}
 
 	private Request.Builder setAuthHeader(Request.Builder requestBuilder) {
