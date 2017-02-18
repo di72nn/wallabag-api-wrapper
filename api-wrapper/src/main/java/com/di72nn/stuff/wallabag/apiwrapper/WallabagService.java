@@ -37,6 +37,8 @@ public class WallabagService {
 
 	private final String apiBaseURL;
 
+	private String serverVersion;
+
 	public enum ResponseFormat {
 		XML, JSON, TXT, CSV, PDF, EPUB, MOBI, HTML;
 
@@ -781,6 +783,14 @@ public class WallabagService {
 
 	public String getVersion() throws IOException, UnsuccessfulResponseException {
 		return checkResponse(getVersionCall().execute()).body();
+	}
+
+	String getServerVersion() throws IOException, UnsuccessfulResponseException {
+		if(serverVersion == null) {
+			serverVersion = getVersion();
+		}
+
+		return serverVersion;
 	}
 
 	private <T> Response<T> checkResponse(Response<T> response) throws IOException, UnsuccessfulResponseException {
