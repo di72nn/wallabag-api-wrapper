@@ -489,13 +489,34 @@ public class WallabagService {
 				if(response.code() == 401) {
 					LOG.debug("response body: " + response.body().string());
 
-					getAccessToken();
+					try {
+						if(getAccessToken()) {
+							request = setHeaders(originalRequest.newBuilder()).build();
+							response = chain.proceed(request);
+						}
+					} catch(GetTokenException e) {
+						LOG.debug("Got GetTokenException");
 
-					request = setHeaders(originalRequest.newBuilder()).build();
-					response = chain.proceed(request);
+						Response<TokenResponse> tokenResponse = e.getResponse();
+						response = tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
+					}
 				}
 			}
 
+			return response;
+		}
+
+	}
+
+	private static class GetTokenException extends Exception {
+
+		private retrofit2.Response<TokenResponse> response;
+
+		GetTokenException(Response<TokenResponse> response) {
+			this.response = response;
+		}
+
+		Response<TokenResponse> getResponse() {
 			return response;
 		}
 
@@ -783,19 +804,27 @@ public class WallabagService {
 		return response;
 	}
 
-	private void getAccessToken() throws IOException {
+	private boolean getAccessToken() throws IOException, GetTokenException {
 		LOG.info("Access token requested");
 
 		LOG.info("Refreshing token");
-		if(getAccessToken(true) != null) return;
+		try {
+			if(getAccessToken(true)) return true;
+		} catch(GetTokenException e) {
+			LOG.debug("GetTokenException");
+
+			Response<TokenResponse> response = e.getResponse();
+			if(response.code() != 400) { // also handle 401?
+				LOG.warn("Unexpected error code: " + response.code());
+				throw e;
+			}
+		}
 
 		LOG.info("Requesting new token");
-		if(getAccessToken(false) == null) {
-			throw new IllegalStateException("Couldn't get access token");
-		}
+		return getAccessToken(false);
 	}
 
-	private TokenResponse getAccessToken(boolean refresh) throws IOException {
+	private boolean getAccessToken(boolean refresh) throws IOException, GetTokenException {
 		LOG.info("started");
 
 		FormBody.Builder bodyBuilder = new FormBody.Builder()
@@ -806,7 +835,7 @@ public class WallabagService {
 			String refreshToken = parameterHandler.getRefreshToken();
 			if(refreshToken == null || refreshToken.isEmpty()) {
 				LOG.debug("Refresh token is empty or null");
-				return null;
+				return false;
 			}
 			bodyBuilder.add("grant_type", GRANT_TYPE_REFRESH_TOKEN)
 					.add("refresh_token", refreshToken);
@@ -820,26 +849,15 @@ public class WallabagService {
 		Call<TokenResponse> tokenResponseCall = wallabagAuthService.token(body);
 		Response<TokenResponse> response = tokenResponseCall.execute();
 
-		// TODO: handle errors
 		if(!response.isSuccessful()) {
-			if(response.code() == 400) {
-				LOG.debug("response code: " + response.code() + ", body: " + response.errorBody().string());
-				return null;
-			} else {
-				// TODO: decent exception
-				throw new IllegalStateException("Response is unsuccessful; code: " + response.code()
-						+ ", body: " + response.errorBody().string());
-			}
+			throw new GetTokenException(response);
 		}
 
 		TokenResponse tokenResponse = response.body();
-		LOG.info("Got token: " + tokenResponse); // TODO: remove: sensitive
+		boolean result = parameterHandler.tokensUpdated(tokenResponse);
 
-		parameterHandler.tokensUpdated(tokenResponse);
-
-		LOG.info("finished");
-
-		return tokenResponse;
+		LOG.info("finished; result: {}", result);
+		return result;
 	}
 
 	private Request.Builder setHeaders(Request.Builder requestBuilder) {

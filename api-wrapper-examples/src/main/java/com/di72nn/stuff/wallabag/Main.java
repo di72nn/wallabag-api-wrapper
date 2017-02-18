@@ -4,6 +4,8 @@ import com.di72nn.stuff.wallabag.apiwrapper.BasicParameterHandler;
 import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Main {
+
+	private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) {
 		String baseUrl = "";
@@ -25,7 +29,14 @@ public class Main {
 		String accessToken = "";
 
 		WallabagService service = new WallabagService(baseUrl, new BasicParameterHandler(
-				username, password, clientID, clientSecret, refreshToken, accessToken));
+				username, password, clientID, clientSecret, refreshToken, accessToken) {
+			@Override
+			public boolean tokensUpdated(TokenResponse token) {
+				LOG.info("Got token: " + token);
+
+				return super.tokensUpdated(token);
+			}
+		});
 
 		try {
 			System.out.println("Server version: " + service.getVersion());
@@ -114,10 +125,9 @@ public class Main {
 				System.out.println("Created at: " + a.createdAt);
 			}
 		} catch(IOException e) {
-			e.printStackTrace();
+			LOG.error("IOException", e);
 		} catch(UnsuccessfulResponseException e) {
-			System.out.println("Response code: " + e.getResponseCode() + ", body: " + e.getResponseBody());
-			e.printStackTrace();
+			LOG.error("UnsuccessfulResponseException", e);
 		}
 	}
 

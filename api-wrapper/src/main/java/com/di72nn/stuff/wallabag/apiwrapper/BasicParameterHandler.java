@@ -53,9 +53,11 @@ public class BasicParameterHandler implements ParameterHandler {
 	}
 
 	@Override
-	public void tokensUpdated(TokenResponse token) {
+	public boolean tokensUpdated(TokenResponse token) {
 		if(token.refreshToken != null) refreshToken = token.refreshToken;
 		accessToken = token.accessToken;
+
+		return accessToken != null && !accessToken.isEmpty();
 	}
 
 }

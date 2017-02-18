@@ -16,6 +16,6 @@ public interface ParameterHandler {
 
 	String getAccessToken();
 
-	void tokensUpdated(TokenResponse token);
+	boolean tokensUpdated(TokenResponse token);
 
 }
