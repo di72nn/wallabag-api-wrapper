@@ -1,6 +1,6 @@
 package com.di72nn.stuff.wallabag.apiwrapper;
 
-import com.di72nn.stuff.wallabag.apiwrapper.adapters.NumericBooleanAdapter;
+import com.di72nn.stuff.wallabag.apiwrapper.models.adapters.NumericBooleanAdapter;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.AuthorizationException;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.NotFoundException;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;

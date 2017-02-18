@@ -1,4 +1,4 @@
-package com.di72nn.stuff.wallabag.apiwrapper.adapters;
+package com.di72nn.stuff.wallabag.apiwrapper.models.adapters;
 
 import com.squareup.moshi.JsonQualifier;
 

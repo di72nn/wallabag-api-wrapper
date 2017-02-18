@@ -1,6 +1,6 @@
 package com.di72nn.stuff.wallabag.apiwrapper.models;
 
-import com.di72nn.stuff.wallabag.apiwrapper.adapters.NumericBoolean;
+import com.di72nn.stuff.wallabag.apiwrapper.models.adapters.NumericBoolean;
 import com.squareup.moshi.Json;
 
 import java.util.Date;
