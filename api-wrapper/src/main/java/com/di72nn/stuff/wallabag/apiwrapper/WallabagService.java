@@ -534,6 +534,8 @@ public class WallabagService {
 			throw new NullPointerException("parameterHandler is null");
 		}
 
+		if(!apiBaseURL.endsWith("/")) apiBaseURL += "/";
+
 		this.apiBaseURL = apiBaseURL;
 		this.parameterHandler = parameterHandler;
 
