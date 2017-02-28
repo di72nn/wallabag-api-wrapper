@@ -34,7 +34,7 @@ public interface WallabagApiService {
 	Call<Article> getArticle(@Path("entry") int articleID);
 
 	@Streaming
-	@GET("/api/entries/{entry}/export.{format}")
+	@GET("api/entries/{entry}/export.{format}")
 	Call<ResponseBody> exportArticle(@Path("entry") int articleID, @Path("format") String format);
 
 	@PATCH("api/entries/{entry}.json")
