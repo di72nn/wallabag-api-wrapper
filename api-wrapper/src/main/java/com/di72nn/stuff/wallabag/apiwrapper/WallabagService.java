@@ -599,7 +599,7 @@ public class WallabagService {
 	}
 
 	public Call<Map<String, Boolean>> articlesExistCall(Collection<String> urls) {
-		return wallabagApiService.exists(new HashSet<>(nonEmptyCollection(urls, "urls")));
+		return wallabagApiService.exists(nonEmptyCollection(urls, "urls"));
 	}
 
 	public Map<String, Boolean> articlesExist(Collection<String> urls) throws IOException, UnsuccessfulResponseException {
