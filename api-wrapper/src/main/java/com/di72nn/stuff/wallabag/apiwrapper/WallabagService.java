@@ -741,13 +741,13 @@ public class WallabagService {
 	public Call<Annotation> addAnnotationCall(int articleID, List<Annotation.Range> ranges, String text, String quote) {
 		nonNegativeNumber(articleID, "articleID");
 		nonEmptyCollection(ranges, "ranges");
-		nonEmptyString(text, "text"); // TODO: check
+		nonNullValue(text, "text");
 
 		// use object serialization instead?
 		Map<String, Object> parameters = new HashMap<>(3);
 		parameters.put("text", text);
 		if(quote != null) parameters.put("quote", quote);
-		parameters.put("ranges", ranges); // TODO: copy list?
+		parameters.put("ranges", ranges);
 
 		return wallabagApiService.addAnnotation(articleID, parameters);
 	}
@@ -759,7 +759,7 @@ public class WallabagService {
 
 	public Call<Annotation> updateAnnotationCall(int articleID, String text) {
 		nonNegativeNumber(articleID, "articleID");
-		nonEmptyString(text, "text"); // TODO: check
+		nonNullValue(text, "text");
 
 		Map<String, String> parameters = new HashMap<>(1);
 		parameters.put("text", text);
