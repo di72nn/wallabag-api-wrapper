@@ -78,7 +78,35 @@ public class WallabagService {
 
 	}
 
-	public final class ArticlesQueryBuilder {
+	private static class BaseTagsBuilder {
+
+		Set<String> tags;
+
+		BaseTagsBuilder() {}
+
+		void tagInternal(String tag) {
+			nonEmptyString(tag, "tag");
+
+			Set<String> tags = this.tags;
+			if(tags == null) {
+				this.tags = tags = new HashSet<>();
+			}
+			tags.add(tag);
+		}
+
+		void tagsInternal(Collection<String> tags) {
+			nonEmptyCollection(tags, "tags");
+
+			Set<String> tagsLocal = this.tags;
+			if(tagsLocal == null) {
+				this.tags = tagsLocal = new HashSet<>();
+			}
+			tags.addAll(tagsLocal);
+		}
+
+	}
+
+	public class ArticlesQueryBuilder extends BaseTagsBuilder {
 
 		private Boolean archive;
 		private Boolean starred;
@@ -86,7 +114,6 @@ public class WallabagService {
 		private SortOrder sortOrder = SortOrder.DESCENDING;
 		private int page = 1;
 		private int perPage = 30;
-		private Set<String> tags;
 		private long since = 0;
 
 		private ArticlesQueryBuilder() {}
@@ -121,28 +148,13 @@ public class WallabagService {
 			return this;
 		}
 
-		// TODO: reuse code
 		public ArticlesQueryBuilder tag(String tag) {
-			nonEmptyString(tag, "tag");
-
-			Set<String> tags = this.tags;
-			if(tags == null) {
-				this.tags = tags = new HashSet<>();
-			}
-			tags.add(tag);
-
+			tagInternal(tag);
 			return this;
 		}
 
 		public ArticlesQueryBuilder tags(Collection<String> tags) {
-			nonEmptyCollection(tags, "tags");
-
-			Set<String> tagsLocal = this.tags;
-			if(tagsLocal == null) {
-				this.tags = tagsLocal = new HashSet<>();
-			}
-			tags.addAll(tagsLocal);
-
+			tagsInternal(tags);
 			return this;
 		}
 
@@ -201,11 +213,10 @@ public class WallabagService {
 
 	}
 
-	public class AddArticleBuilder {
+	public class AddArticleBuilder extends BaseTagsBuilder {
 
 		private final String url;
 		private String title;
-		private Set<String> tags;
 		private Boolean starred;
 		private Boolean archive;
 
@@ -219,26 +230,12 @@ public class WallabagService {
 		}
 
 		public AddArticleBuilder tag(String tag) {
-			nonEmptyString(tag, "tag");
-
-			Set<String> tags = this.tags;
-			if(tags == null) {
-				this.tags = tags = new HashSet<>();
-			}
-			tags.add(tag);
-
+			tagInternal(tag);
 			return this;
 		}
 
 		public AddArticleBuilder tags(Collection<String> tags) {
-			nonEmptyCollection(tags, "tags");
-
-			Set<String> tagsLocal = this.tags;
-			if(tagsLocal == null) {
-				this.tags = tagsLocal = new HashSet<>();
-			}
-			tags.addAll(tagsLocal);
-
+			tagsInternal(tags);
 			return this;
 		}
 
@@ -276,11 +273,10 @@ public class WallabagService {
 
 	}
 
-	public class ModifyArticleBuilder {
+	public class ModifyArticleBuilder extends BaseTagsBuilder {
 
 		private final int id;
 		private String title;
-		private Set<String> tags;
 		private Boolean starred;
 		private Boolean archive;
 
@@ -294,26 +290,12 @@ public class WallabagService {
 		}
 
 		public ModifyArticleBuilder tag(String tag) {
-			nonEmptyString(tag, "tag");
-
-			Set<String> tags = this.tags;
-			if(tags == null) {
-				this.tags = tags = new HashSet<>();
-			}
-			tags.add(tag);
-
+			tagInternal(tag);
 			return this;
 		}
 
 		public ModifyArticleBuilder tags(Collection<String> tags) {
-			nonEmptyCollection(tags, "tags");
-
-			Set<String> tagsLocal = this.tags;
-			if(tagsLocal == null) {
-				this.tags = tagsLocal = new HashSet<>();
-			}
-			tags.addAll(tagsLocal);
-
+			tagsInternal(tags);
 			return this;
 		}
 
