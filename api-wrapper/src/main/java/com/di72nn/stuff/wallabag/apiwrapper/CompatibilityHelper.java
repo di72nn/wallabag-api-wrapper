@@ -139,6 +139,15 @@ public class CompatibilityHelper {
 		return isDeleteTagByIdSupported(wallabagService.getServerVersion());
 	}
 
+	public static boolean isDeleteTagsByLabelSupported(String serverVersion) {
+		return false; // server bug
+	}
+
+	public static boolean isDeleteTagsByLabelSupported(WallabagService wallabagService)
+			throws IOException, UnsuccessfulResponseException {
+		return false; // server bug
+	}
+
 	public static boolean isGetAnnotationsSupported(String serverVersion) {
 		return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
 	}

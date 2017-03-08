@@ -53,6 +53,9 @@ public interface WallabagApiService {
 	@DELETE("api/tag/label.json")
 	Call<Tag> deleteTag(@Query("tag") String tag);
 
+	@DELETE("api/tags/label.json")
+	Call<List<Tag>> deleteTags(@Query("tags") String tags);
+
 	@DELETE("api/tags/{tag_id}.json")
 	Call<Tag> deleteTag(@Path("tag_id") int tagID);
 

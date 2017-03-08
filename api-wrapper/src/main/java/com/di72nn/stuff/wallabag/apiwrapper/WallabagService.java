@@ -711,6 +711,15 @@ public class WallabagService {
 		return checkResponse(deleteTagCall(tagID).execute()).body();
 	}
 
+	// always throws 404 because of server bug
+	public Call<List<Tag>> deleteTagsCall(Collection<String> tags) {
+		return wallabagApiService.deleteTags(join(nonNullValue(tags, "tags"), ","));
+	}
+
+	public List<Tag> deleteTags(Collection<String> tags) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteTagsCall(tags).execute()).body();
+	}
+
 	public Call<Annotations> getAnnotationsCall(int articleID)  {
 		return wallabagApiService.getAnnotations(nonNegativeNumber(articleID, "articleID"));
 	}
