@@ -200,6 +200,7 @@ public class CompatibilityHelper {
 
 			case "2.2.0":
 			case "2.2.1":
+			case "2.2.2":
 				return VERSION_CODE_2_2_0;
 		}
 
