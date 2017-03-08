@@ -193,7 +193,7 @@ public class WallabagService {
 			copy.sortOrder = sortOrder;
 			copy.page = page;
 			copy.perPage = perPage;
-			copy.tags = tags; // no need to create new collection?
+			if(tags != null) copy.tags = new HashSet<>(tags);
 			copy.since = since;
 
 			return copy;
