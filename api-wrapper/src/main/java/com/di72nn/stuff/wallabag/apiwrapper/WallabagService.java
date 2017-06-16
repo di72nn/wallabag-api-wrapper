@@ -352,6 +352,7 @@ public class WallabagService {
 
 		private int maxQueryLength;
 
+		@SuppressWarnings("ConstantConditions") // constant URL
 		private final HttpUrl.Builder builder = HttpUrl.parse("https://a").newBuilder();
 
 		private final List<String> urls = new ArrayList<>();
@@ -375,6 +376,7 @@ public class WallabagService {
 		public boolean addUrl(String url) {
 			nonNullValue(url, "url");
 
+			@SuppressWarnings("ConstantConditions") // always non-empty query
 			int parameterLength = builder.setQueryParameter("urls[]", url).build().encodedQuery().length() + 1;
 			if(currentRequestLength + parameterLength <= maxQueryLength) {
 				urls.add(url);
@@ -471,7 +473,8 @@ public class WallabagService {
 				LOG.info("intercept() unsuccessful response; code: " + response.code());
 
 				if(response.code() == 401) {
-					LOG.debug("response body: " + response.body().string());
+					ResponseBody body = response.body();
+					LOG.debug("response body: " + (body != null ? body.string() : null));
 
 					try {
 						if(getAccessToken()) {
