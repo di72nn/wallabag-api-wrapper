@@ -1,5 +1,5 @@
 dependencies {
     compile project(':api-wrapper')
 
-    runtime 'ch.qos.logback:logback-classic:1.2.1'
+    runtime 'ch.qos.logback:logback-classic:1.2.3'
 }
