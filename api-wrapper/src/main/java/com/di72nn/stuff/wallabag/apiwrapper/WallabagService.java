@@ -101,7 +101,7 @@ public class WallabagService {
 			if(tagsLocal == null) {
 				this.tags = tagsLocal = new HashSet<>();
 			}
-			this.tags.addAll(tags);
+			tagsLocal.addAll(tags);
 		}
 
 	}
