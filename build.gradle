@@ -14,17 +14,22 @@ subprojects {
     targetCompatibility = 1.7
 
     task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
         from sourceSets.main.allSource
+        archiveClassifier = 'sources'
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
         from javadoc.destinationDir
+        archiveClassifier = 'javadoc'
     }
 
     artifacts {
         archives sourcesJar
         archives javadocJar
     }
+}
+
+wrapper {
+    gradleVersion = "5.6"
+    distributionType = Wrapper.DistributionType.ALL
 }
