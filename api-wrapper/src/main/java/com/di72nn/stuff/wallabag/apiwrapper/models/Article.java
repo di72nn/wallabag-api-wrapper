@@ -10,6 +10,8 @@ public class Article {
 
 	public int id = -1;
 
+	public String uid;
+
 	public String url;
 
 	public String title;
@@ -24,9 +26,8 @@ public class Article {
 	@Json(name = "is_starred")
 	public boolean starred;
 
-	public String username;
-
-	public String userEmail;
+	@Json(name = "starred_at")
+	public Date starredAt;
 
 	public List<Tag> tags;
 
@@ -50,5 +51,14 @@ public class Article {
 
 	@Json(name = "preview_picture")
 	public String previewPicture;
+
+	@Json(name = "origin_url")
+	public String originUrl;
+
+	@Json(name = "published_at")
+	public Date publishedAt;
+
+	@Json(name = "published_by")
+	public List<String> publishedBy;
 
 }
