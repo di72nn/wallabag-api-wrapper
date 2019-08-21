@@ -8,7 +8,7 @@ import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagApiService;
 import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagAuthService;
 import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Rfc3339DateJsonAdapter;
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

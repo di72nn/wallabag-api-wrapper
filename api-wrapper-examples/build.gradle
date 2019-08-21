@@ -1,5 +1,7 @@
 dependencies {
-    compile project(':api-wrapper')
+    implementation project(':api-wrapper')
+    implementation 'com.squareup.okhttp3:okhttp:3.12.3'
 
+    implementation 'org.slf4j:slf4j-api:1.7.28'
     runtime 'ch.qos.logback:logback-classic:1.2.3'
 }

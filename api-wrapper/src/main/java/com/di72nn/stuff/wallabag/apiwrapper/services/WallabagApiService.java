@@ -1,6 +1,7 @@
 package com.di72nn.stuff.wallabag.apiwrapper.services;
 
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
+import com.di72nn.stuff.wallabag.apiwrapper.models.Tag;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
