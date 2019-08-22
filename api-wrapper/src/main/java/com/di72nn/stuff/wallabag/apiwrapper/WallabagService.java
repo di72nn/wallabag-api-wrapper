@@ -78,13 +78,13 @@ public class WallabagService {
 
 	}
 
-	private static class BaseTagsBuilder {
+	abstract static class AbstractTagsBuilder<T extends AbstractTagsBuilder<T>> {
 
 		Set<String> tags;
 
-		BaseTagsBuilder() {}
+		abstract T self();
 
-		void tagInternal(String tag) {
+		public T tag(String tag) {
 			nonEmptyString(tag, "tag");
 
 			Set<String> tags = this.tags;
@@ -92,21 +92,36 @@ public class WallabagService {
 				this.tags = tags = new HashSet<>();
 			}
 			tags.add(tag);
+
+			return self();
 		}
 
-		void tagsInternal(Collection<String> tags) {
+		public T tags(Collection<String> tags) {
 			nonEmptyCollection(tags, "tags");
 
 			Set<String> tagsLocal = this.tags;
 			if(tagsLocal == null) {
-				this.tags = tagsLocal = new HashSet<>();
+				this.tags = tagsLocal = new HashSet<>(tags.size());
 			}
 			tagsLocal.addAll(tags);
+
+			return self();
+		}
+
+		String getTagsString() {
+			if(tags != null && !tags.isEmpty()) {
+				return Utils.join(tags, ",");
+			}
+			return null;
+		}
+
+		void copyTags(T copy) {
+			if(tags != null) copy.tags = new HashSet<>(tags);
 		}
 
 	}
 
-	public class ArticlesQueryBuilder extends BaseTagsBuilder {
+	public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuilder> {
 
 		private Boolean archive;
 		private Boolean starred;
@@ -117,6 +132,11 @@ public class WallabagService {
 		private long since = 0;
 
 		private ArticlesQueryBuilder() {}
+
+		@Override
+		ArticlesQueryBuilder self() {
+			return this;
+		}
 
 		public ArticlesQueryBuilder archive(boolean archive) {
 			this.archive = archive;
@@ -148,16 +168,6 @@ public class WallabagService {
 			return this;
 		}
 
-		public ArticlesQueryBuilder tag(String tag) {
-			tagInternal(tag);
-			return this;
-		}
-
-		public ArticlesQueryBuilder tags(Collection<String> tags) {
-			tagsInternal(tags);
-			return this;
-		}
-
 		public ArticlesQueryBuilder since(long since) {
 			this.since = since;
 			return this;
@@ -172,9 +182,8 @@ public class WallabagService {
 			parameters.put("order", sortOrder.apiValue());
 			parameters.put("page", String.valueOf(page));
 			parameters.put("perPage", String.valueOf(perPage));
-			if(tags != null && !tags.isEmpty()) {
-				parameters.put("tags", Utils.join(tags, ","));
-			}
+			String tagsString = getTagsString();
+			if (tagsString != null) parameters.put("tags", tagsString);
 			parameters.put("since", String.valueOf(since));
 
 			return parameters;
@@ -205,7 +214,7 @@ public class WallabagService {
 			copy.sortOrder = sortOrder;
 			copy.page = page;
 			copy.perPage = perPage;
-			if(tags != null) copy.tags = new HashSet<>(tags);
+			copyTags(copy);
 			copy.since = since;
 
 			return copy;
@@ -213,54 +222,142 @@ public class WallabagService {
 
 	}
 
-	public class AddArticleBuilder extends BaseTagsBuilder {
+	abstract static class AbstractArticleBuilder<T extends AbstractArticleBuilder<T>> extends AbstractTagsBuilder<T> {
 
-		private final String url;
-		private String title;
-		private Boolean starred;
-		private Boolean archive;
+		String title;
+		String content;
+		String language;
+		String previewPicture;
+		Boolean starred;
+		Boolean archive;
+		Date publishedAt;
+		List<String> authors;
+		Boolean isPublic;
+		String originUrl;
 
-		private AddArticleBuilder(String url) {
+		public T title(String title) {
+			this.title = nonEmptyString(title, "title");
+			return self();
+		}
+
+		public T content(String content) {
+			this.content = nonEmptyString(content, "content");
+			return self();
+		}
+
+		public T language(String language) {
+			this.language = nonEmptyString(language, "language");
+			return self();
+		}
+
+		public T previewPicture(String previewPicture) {
+			this.previewPicture = nonEmptyString(previewPicture, "previewPicture");
+			return self();
+		}
+
+		public T starred(boolean starred) {
+			this.starred = starred;
+			return self();
+		}
+
+		public T archive(boolean archive) {
+			this.archive = archive;
+			return self();
+		}
+
+		public T publishedAt(Date publishedAt) {
+			this.publishedAt = nonNullValue(publishedAt, "publishedAt");
+			return self();
+		}
+
+		public T author(String author) {
+			nonEmptyString(author, "author");
+
+			List<String> authors = this.authors;
+			if(authors == null) {
+				this.authors = authors = new ArrayList<>(1);
+			}
+			authors.add(author);
+
+			return self();
+		}
+
+		public T authors(Collection<String> authors) {
+			nonEmptyCollection(authors, "authors");
+
+			List<String> authorsLocal = this.authors;
+			if(authorsLocal == null) {
+				this.authors = authorsLocal = new ArrayList<>(authors.size());
+			}
+			authorsLocal.addAll(authors);
+
+			return self();
+		}
+
+		public T isPublic(boolean isPublic) {
+			this.isPublic = isPublic;
+			return self();
+		}
+
+		public T originUrl(String originUrl) {
+			this.originUrl = nonEmptyString(originUrl, "originUrl");
+			return self();
+		}
+
+		String getPublishedAtString() {
+			if (publishedAt != null) {
+				return String.valueOf(publishedAt.getTime() / 1000);
+			}
+			return null;
+		}
+
+		String getAuthorsString() {
+			if(authors != null && !authors.isEmpty()) {
+				return Utils.join(authors, ",");
+			}
+			return null;
+		}
+
+		FormBody.Builder populateFormBodyBuilder(FormBody.Builder bodyBuilder) {
+			addParameter(bodyBuilder, "title", title);
+			addParameter(bodyBuilder, "content", content);
+			addParameter(bodyBuilder, "language", language);
+			addParameter(bodyBuilder, "preview_picture", previewPicture);
+			addParameter(bodyBuilder, "starred", Utils.booleanToNullableNumberString(starred));
+			addParameter(bodyBuilder, "archive", Utils.booleanToNullableNumberString(archive));
+			addParameter(bodyBuilder, "published_at", getPublishedAtString());
+			addParameter(bodyBuilder, "authors", getAuthorsString());
+			addParameter(bodyBuilder, "tags", getTagsString());
+			addParameter(bodyBuilder, "public", Utils.booleanToNullableNumberString(isPublic));
+			addParameter(bodyBuilder, "origin_url", originUrl);
+
+			return bodyBuilder;
+		}
+
+		void addParameter(FormBody.Builder bodyBuilder, String paramName, String paramValue) {
+			if (paramValue != null) bodyBuilder.add(paramName, paramValue);
+		}
+
+	}
+
+	public class AddArticleBuilder extends AbstractArticleBuilder<AddArticleBuilder> {
+
+		final String url;
+
+		AddArticleBuilder(String url) {
 			this.url = nonEmptyString(url, "url");
 		}
 
-		public AddArticleBuilder title(String title) {
-			this.title = nonEmptyString(title, "title");
+		@Override
+		AddArticleBuilder self() {
 			return this;
 		}
 
-		public AddArticleBuilder tag(String tag) {
-			tagInternal(tag);
-			return this;
-		}
-
-		public AddArticleBuilder tags(Collection<String> tags) {
-			tagsInternal(tags);
-			return this;
-		}
-
-		public AddArticleBuilder starred(boolean starred) {
-			this.starred = starred;
-			return this;
-		}
-
-		public AddArticleBuilder archive(boolean archive) {
-			this.archive = archive;
-			return this;
-		}
-
-		private RequestBody build() {
+		RequestBody build() {
 			FormBody.Builder bodyBuilder = new FormBody.Builder()
 					.add("url", url);
 
-			if(title != null) bodyBuilder.add("title", title);
-			if(tags != null && !tags.isEmpty()) {
-				bodyBuilder.add("tags", Utils.join(tags, ","));
-			}
-			if(starred != null) bodyBuilder.add("starred", Utils.booleanToNumberString(starred));
-			if(archive != null) bodyBuilder.add("archive", Utils.booleanToNumberString(archive));
-
-			return bodyBuilder.build();
+			return populateFormBodyBuilder(bodyBuilder).build();
 		}
 
 		public Call<Article> buildCall() {
@@ -273,69 +370,27 @@ public class WallabagService {
 
 	}
 
-	public class ModifyArticleBuilder extends BaseTagsBuilder {
+	public class ModifyArticleBuilder extends AbstractArticleBuilder<ModifyArticleBuilder> {
 
-		private final int id;
-		private String title;
-		private Boolean starred;
-		private Boolean archive;
+		final int id;
 
-		private ModifyArticleBuilder(int id) {
+		ModifyArticleBuilder(int id) {
 			this.id = nonNegativeNumber(id, "id");
 		}
 
-		public ModifyArticleBuilder title(String title) {
-			this.title = nonEmptyString(title, "title");
+		@Override
+		ModifyArticleBuilder self() {
 			return this;
 		}
 
-		public ModifyArticleBuilder tag(String tag) {
-			tagInternal(tag);
-			return this;
-		}
+		RequestBody build() {
+			FormBody formBody = populateFormBodyBuilder(new FormBody.Builder()).build();
 
-		public ModifyArticleBuilder tags(Collection<String> tags) {
-			tagsInternal(tags);
-			return this;
-		}
-
-		public ModifyArticleBuilder starred(boolean starred) {
-			this.starred = starred;
-			return this;
-		}
-
-		public ModifyArticleBuilder archive(boolean archive) {
-			this.archive = archive;
-			return this;
-		}
-
-		private RequestBody build() {
-			FormBody.Builder bodyBuilder = new FormBody.Builder();
-
-			boolean changed = false;
-
-			if(title != null) {
-				bodyBuilder.add("title", title);
-				changed = true;
-			}
-			if(tags != null && !tags.isEmpty()) {
-				bodyBuilder.add("tags", Utils.join(tags, ","));
-				changed = true;
-			}
-			if(archive != null) {
-				bodyBuilder.add("archive", Utils.booleanToNumberString(archive));
-				changed = true;
-			}
-			if(starred != null) {
-				bodyBuilder.add("starred", Utils.booleanToNumberString(starred));
-				changed = true;
-			}
-
-			if(!changed) {
+			if(formBody.size() == 0) {
 				throw new IllegalStateException("No changes done");
 			}
 
-			return bodyBuilder.build();
+			return formBody;
 		}
 
 		public Call<Article> buildCall() {
@@ -539,7 +594,7 @@ public class WallabagService {
 				.addConverterFactory(MoshiConverterFactory.create(
 						new Moshi.Builder()
 								.add(new NumericBooleanAdapter())
-								.add(Date.class, new Rfc3339DateJsonAdapter())
+								.add(Date.class, new Rfc3339DateJsonAdapter().nullSafe())
 								.build()))
 				.client(okHttpClient)
 				.baseUrl(apiBaseURL)

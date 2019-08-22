@@ -59,6 +59,6 @@ public class Article {
 	public Date publishedAt;
 
 	@Json(name = "published_by")
-	public List<String> publishedBy;
+	public List<String> authors;
 
 }

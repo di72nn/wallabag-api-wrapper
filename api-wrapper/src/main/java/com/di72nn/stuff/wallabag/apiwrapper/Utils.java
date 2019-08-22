@@ -53,4 +53,8 @@ class Utils {
 		return String.valueOf(value ? 1 : 0);
 	}
 
+	static String booleanToNullableNumberString(Boolean value) {
+		return value != null ? booleanToNumberString(value) : null;
+	}
+
 }
