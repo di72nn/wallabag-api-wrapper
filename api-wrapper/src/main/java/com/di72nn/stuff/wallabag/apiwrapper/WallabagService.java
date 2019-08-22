@@ -130,6 +130,7 @@ public class WallabagService {
 		private int page = 1;
 		private int perPage = 30;
 		private long since = 0;
+		private Boolean isPublic;
 
 		private ArticlesQueryBuilder() {}
 
@@ -173,6 +174,11 @@ public class WallabagService {
 			return this;
 		}
 
+		public ArticlesQueryBuilder setPublic(Boolean isPublic) {
+			this.isPublic = isPublic;
+			return this;
+		}
+
 		private Map<String, String> build() {
 			Map<String, String> parameters = new HashMap<>();
 
@@ -185,6 +191,7 @@ public class WallabagService {
 			String tagsString = getTagsString();
 			if (tagsString != null) parameters.put("tags", tagsString);
 			parameters.put("since", String.valueOf(since));
+			if (isPublic != null) parameters.put("public", Utils.booleanToNumberString(isPublic));
 
 			return parameters;
 		}
@@ -216,6 +223,7 @@ public class WallabagService {
 			copy.perPage = perPage;
 			copyTags(copy);
 			copy.since = since;
+			copy.isPublic = isPublic;
 
 			return copy;
 		}

@@ -10,8 +10,6 @@ public class Article {
 
 	public int id = -1;
 
-	public String uid;
-
 	public String url;
 
 	public String title;
@@ -60,5 +58,11 @@ public class Article {
 
 	@Json(name = "published_by")
 	public List<String> authors;
+
+	@Json(name = "is_public")
+	public Boolean isPublic;
+
+	@Json(name = "uid")
+	public String publicUid;
 
 }
