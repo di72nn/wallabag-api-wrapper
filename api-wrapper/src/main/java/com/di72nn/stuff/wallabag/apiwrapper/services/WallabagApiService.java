@@ -26,7 +26,13 @@ public interface WallabagApiService {
 	Call<ExistsResponse> exists(@Query("url") String url);
 
 	@GET("api/entries/exists.json")
+	Call<ExistsWithIdResponse> exists(@Query("url") String url, @Query("return_id") String returnId);
+
+	@GET("api/entries/exists.json")
 	Call<Map<String, Boolean>> exists(@Query("urls[]") Collection<String> urls);
+
+	@GET("api/entries/exists.json")
+	Call<Map<String, Integer>> exists(@Query("urls[]") Collection<String> urls, @Query("return_id") String returnId);
 
 	@DELETE("api/entries/{entry}.json")
 	Call<Article> deleteArticle(@Path("entry") int articleID);

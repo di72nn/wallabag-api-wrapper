@@ -1,6 +1,7 @@
 package com.di72nn.stuff.wallabag;
 
 import com.di72nn.stuff.wallabag.apiwrapper.BasicParameterHandler;
+import com.di72nn.stuff.wallabag.apiwrapper.CompatibilityHelper;
 import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
@@ -37,7 +38,8 @@ public class Main {
 		});
 
 		try {
-			System.out.println("Server version: " + service.getVersion());
+			String serverVersion = service.getVersion();
+			System.out.println("Server version: " + serverVersion);
 
 			String testUrl = "https://www.lemonde.fr/politique/article/2017/12/08/presidence-de-lr-trois-droitespour-un-fauteuil_5226595_823448.html";
 
@@ -57,12 +59,20 @@ public class Main {
 			System.out.println("Modified article title: " + article.title);
 
 			System.out.println("Exists: " + service.articleExists(testUrl));
+			if(CompatibilityHelper.isArticleExistsWithIdSupported(serverVersion)) {
+				System.out.println("Exists id: " + service.articleExistsWithId(testUrl));
+			}
 
 			List<String> urls = new ArrayList<>();
 			urls.add(testUrl);
 			urls.add("http://google.com");
 			for(Map.Entry<String, Boolean> entry: service.articlesExist(urls).entrySet()) {
 				System.out.println("URL: " + entry.getKey() + ", exists: " + entry.getValue());
+			}
+			if(CompatibilityHelper.isArticleExistsWithIdSupported(serverVersion)) {
+				for(Map.Entry<String, Integer> entry : service.articlesExistWithId(urls).entrySet()) {
+					System.out.println("URL: " + entry.getKey() + ", id: " + entry.getValue());
+				}
 			}
 
 			System.out.println("Article title: " + service.getArticle(article.id).title);

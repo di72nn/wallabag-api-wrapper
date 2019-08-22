@@ -455,8 +455,16 @@ public class WallabagService {
 			return articlesExistCall(urls);
 		}
 
+		public Call<Map<String, Integer>> buildCallWithId() {
+			return articlesExistWithIdCall(urls);
+		}
+
 		public Map<String, Boolean> execute() throws IOException, UnsuccessfulResponseException {
 			return articlesExist(urls);
+		}
+
+		public Map<String, Integer> executeWithId() throws IOException, UnsuccessfulResponseException {
+			return articlesExistWithId(urls);
 		}
 
 	}
@@ -664,12 +672,30 @@ public class WallabagService {
 		return checkResponse(articleExistsCall(url).execute()).body().exists;
 	}
 
+	public Call<ExistsWithIdResponse> articleExistsWithIdCall(String url) {
+		return wallabagApiService.exists(nonEmptyString(url, "URL"), "1");
+	}
+
+	public Integer articleExistsWithId(String url) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(articleExistsWithIdCall(url).execute()).body().id;
+	}
+
 	public Call<Map<String, Boolean>> articlesExistCall(Collection<String> urls) {
 		return wallabagApiService.exists(nonEmptyCollection(urls, "urls"));
 	}
 
-	public Map<String, Boolean> articlesExist(Collection<String> urls) throws IOException, UnsuccessfulResponseException {
+	public Map<String, Boolean> articlesExist(Collection<String> urls)
+			throws IOException, UnsuccessfulResponseException {
 		return checkResponse(articlesExistCall(urls).execute()).body();
+	}
+
+	public Call<Map<String, Integer>> articlesExistWithIdCall(Collection<String> urls) {
+		return wallabagApiService.exists(nonEmptyCollection(urls, "urls"), "1");
+	}
+
+	public Map<String, Integer> articlesExistWithId(Collection<String> urls)
+			throws IOException, UnsuccessfulResponseException {
+		return checkResponse(articlesExistWithIdCall(urls).execute()).body();
 	}
 
 	public BatchExistQueryBuilder getArticlesExistQueryBuilder() {
