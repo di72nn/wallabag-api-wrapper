@@ -8,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Main {
 
@@ -41,13 +39,15 @@ public class Main {
 		try {
 			System.out.println("Server version: " + service.getVersion());
 
-			Article article = service.addArticleBuilder("http://doc.wallabag.org/en/master/developer/api.html")
+			String testUrl = "https://www.lemonde.fr/politique/article/2017/12/08/presidence-de-lr-trois-droitespour-un-fauteuil_5226595_823448.html";
+
+			Article article = service.addArticleBuilder(testUrl)
 					.starred(true)
 					.tag("new_test_tag1").tag("new_test_tag2").tag("test_rm")
 					.title("Custom title test")
 					.execute();
 
-			System.out.println("Reloaded article is null: " + (service.reloadArticle(article.id) == null));
+			System.out.println("Reloaded article is not null: " + (service.reloadArticle(article.id) != null));
 
 			System.out.println("Exported as text:" + service.exportArticle(
 					article.id, WallabagService.ResponseFormat.TXT).string());
@@ -56,10 +56,10 @@ public class Main {
 					.title("Modified title for API documentation article").execute();
 			System.out.println("Modified article title: " + article.title);
 
-			System.out.println("Exists: " + service.articleExists("http://doc.wallabag.org/en/master/developer/api.html"));
+			System.out.println("Exists: " + service.articleExists(testUrl));
 
-			List<String> urls = new ArrayList<String>();
-			urls.add("http://doc.wallabag.org/en/master/developer/api.html");
+			List<String> urls = new ArrayList<>();
+			urls.add(testUrl);
 			urls.add("http://google.com");
 			for(Map.Entry<String, Boolean> entry: service.articlesExist(urls).entrySet()) {
 				System.out.println("URL: " + entry.getKey() + ", exists: " + entry.getValue());
@@ -112,6 +112,38 @@ public class Main {
 			}
 
 			System.out.println("Deleted annotation text: " + service.deleteAnnotation(annotation.id).text);
+
+			Calendar calendar = Calendar.getInstance();
+			calendar.set(Calendar.YEAR, 2000);
+			article = service.modifyArticleBuilder(article.id)
+					.content("Modified content")
+					.language("eo")
+					.previewPicture("https://example.com/pic")
+					.publishedAt(calendar.getTime())
+					.author("author1").author("author2")
+					.originUrl("https://example.com/origin")
+					.isPublic(true)
+					.execute();
+			System.out.println(String.format("Modified article content: %s, language: %s, preview picture: %s, " +
+							"publishedAt: %s, authors: %s, originUrl: %s, isPublic: %s, publicUid: %s",
+					article.content, article.language, article.previewPicture, article.publishedAt, article.authors,
+					article.originUrl, article.isPublic, article.publicUid));
+
+			System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
+
+			article = service.addArticleBuilder("https://example.com/test")
+					.title("Test article")
+					.content("Test content")
+					.language("eo")
+					.previewPicture("https://example.com/pic")
+					.publishedAt(calendar.getTime())
+					.author("author1").author("author2")
+					.originUrl("https://example.com/origin")
+					.execute();
+			System.out.println(String.format("Test article title: %s, content: %s, language: %s, preview picture: %s, " +
+							"publishedAt: %s, authors: %s, originUrl: %s",
+					article.title, article.content, article.language, article.previewPicture, article.publishedAt,
+					article.authors, article.originUrl));
 
 			System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
 
