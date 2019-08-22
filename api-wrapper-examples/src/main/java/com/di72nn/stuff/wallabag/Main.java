@@ -155,7 +155,11 @@ public class Main {
 					article.title, article.content, article.language, article.previewPicture, article.publishedAt,
 					article.authors, article.originUrl));
 
-			System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
+			if(CompatibilityHelper.isDeleteArticleWithIdSupported(serverVersion)) {
+				System.out.println("Deleted article id: " + service.deleteArticleWithId(article.id));
+			} else {
+				System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
+			}
 
 			Articles articles = service.getArticlesBuilder().perPage(3).execute();
 			System.out.println("Items length: " + articles.embedded.items.size());

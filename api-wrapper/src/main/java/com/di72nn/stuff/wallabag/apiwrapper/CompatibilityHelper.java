@@ -12,6 +12,7 @@ public class CompatibilityHelper {
 	private static final int VERSION_CODE_2_1_3 = 2010300;
 	private static final int VERSION_CODE_2_2_0 = 2020000;
 	private static final int VERSION_CODE_2_3_0 = 2030000;
+	private static final int VERSION_CODE_2_3_7 = 2030700;
 	private static final int VERSION_CODE_NEWER = 999999999;
 
 	public static boolean isGetArticlesSupported(String serverVersion) {
@@ -66,6 +67,15 @@ public class CompatibilityHelper {
 	public static boolean isDeleteArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
 		return isDeleteArticleSupported(wallabagService.getServerVersion());
+	}
+
+	public static boolean isDeleteArticleWithIdSupported(String serverVersion) {
+		return getVersionCode(serverVersion) >= VERSION_CODE_2_3_7;
+	}
+
+	public static boolean isDeleteArticleWithIdSupported(WallabagService wallabagService)
+			throws IOException, UnsuccessfulResponseException {
+		return isDeleteArticleWithIdSupported(wallabagService.getServerVersion());
 	}
 
 	public static boolean isGetArticleSupported(String serverVersion) {
@@ -222,10 +232,14 @@ public class CompatibilityHelper {
 			case "2.3.5":
 			case "2.3.6":
 				return VERSION_CODE_2_3_0;
+
+			case "2.3.7":
+			case "2.3.8":
+				return VERSION_CODE_2_3_7;
 		}
 
 		// TODO: real version comparison
-		if("2.3".compareTo(serverVersion) < 0) {
+		if("2.3.8".compareTo(serverVersion) < 0) {
 			return VERSION_CODE_NEWER;
 		}
 		if("2.1.3".compareTo(serverVersion) > 0) {

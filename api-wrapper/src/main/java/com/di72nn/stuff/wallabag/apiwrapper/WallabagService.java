@@ -714,6 +714,14 @@ public class WallabagService {
 		return checkResponse(deleteArticleCall(articleID).execute()).body();
 	}
 
+	public Call<DeleteWithIdResponse> deleteArticleWithIdCall(int articleID) {
+		return wallabagApiService.deleteArticle(nonNegativeNumber(articleID, "articleID"), "id");
+	}
+
+	public Integer deleteArticleWithId(int articleID) throws IOException, UnsuccessfulResponseException {
+		return checkResponse(deleteArticleWithIdCall(articleID).execute()).body().id;
+	}
+
 	public Call<Article> getArticleCall(int articleID) {
 		return wallabagApiService.getArticle(nonNegativeNumber(articleID, "articleID"));
 	}

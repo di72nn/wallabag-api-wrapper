@@ -37,6 +37,9 @@ public interface WallabagApiService {
 	@DELETE("api/entries/{entry}.json")
 	Call<Article> deleteArticle(@Path("entry") int articleID);
 
+	@DELETE("api/entries/{entry}.json")
+	Call<DeleteWithIdResponse> deleteArticle(@Path("entry") int articleID, @Query("expect") String expect);
+
 	@GET("api/entries/{entry}.json")
 	Call<Article> getArticle(@Path("entry") int articleID);
 
