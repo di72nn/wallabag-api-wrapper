@@ -132,12 +132,12 @@ public class CompatibilityHelper {
 	}
 
 	public static boolean isDeleteTagByLabelSupported(String serverVersion) {
-		return false; // server bug
+		return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
 	}
 
 	public static boolean isDeleteTagByLabelSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return false; // server bug
+		return isDeleteTagByLabelSupported(wallabagService.getServerVersion());
 	}
 
 	public static boolean isDeleteTagByIdSupported(String serverVersion) {
@@ -150,12 +150,12 @@ public class CompatibilityHelper {
 	}
 
 	public static boolean isDeleteTagsByLabelSupported(String serverVersion) {
-		return false; // server bug
+		return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
 	}
 
 	public static boolean isDeleteTagsByLabelSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return false; // server bug
+		return isDeleteTagsByLabelSupported(wallabagService.getServerVersion());
 	}
 
 	public static boolean isGetAnnotationsSupported(String serverVersion) {
