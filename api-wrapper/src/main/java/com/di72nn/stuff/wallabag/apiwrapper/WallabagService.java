@@ -846,18 +846,19 @@ public class WallabagService {
 		return checkResponse(addAnnotationCall(articleID, ranges, text, quote).execute()).body();
 	}
 
-	public Call<Annotation> updateAnnotationCall(int articleID, String text) {
-		nonNegativeNumber(articleID, "articleID");
+	public Call<Annotation> updateAnnotationCall(int annotationID, String text) {
+		nonNegativeNumber(annotationID, "annotationID");
 		nonNullValue(text, "text");
 
 		Map<String, String> parameters = new HashMap<>(1);
 		parameters.put("text", text);
 
-		return wallabagApiService.updateAnnotation(articleID, parameters);
+		return wallabagApiService.updateAnnotation(annotationID, parameters);
 	}
 
-	public Annotation updateAnnotation(int articleID, String text) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(updateAnnotationCall(articleID, text).execute()).body();
+	public Annotation updateAnnotation(int annotationID, String text)
+			throws IOException, UnsuccessfulResponseException {
+		return checkResponse(updateAnnotationCall(annotationID, text).execute()).body();
 	}
 
 	public Call<Annotation> deleteAnnotationCall(int annotationID) {

@@ -79,7 +79,7 @@ public interface WallabagApiService {
 	Call<Annotation> addAnnotation(@Path("entry") int articleID, @Body Map<String, Object> body);
 
 	@PUT("api/annotations/{entry}.json")
-	Call<Annotation> updateAnnotation(@Path("entry") int articleID, @Body Map<String, String> body);
+	Call<Annotation> updateAnnotation(@Path("entry") int annotationID, @Body Map<String, String> body);
 
 	@DELETE("api/annotations/{annotation}.json")
 	Call<Annotation> deleteAnnotation(@Path("annotation") int annotationID);
