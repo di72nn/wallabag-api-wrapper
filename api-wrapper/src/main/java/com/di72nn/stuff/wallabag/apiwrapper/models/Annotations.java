@@ -8,4 +8,12 @@ public class Annotations {
 
 	public List<Annotation> rows;
 
+	@Override
+	public String toString() {
+		return "Annotations{" +
+				"total=" + total +
+				", rows" + (rows == null ? "=null" : ("[" + rows.size() + "]")) +
+				'}';
+	}
+
 }

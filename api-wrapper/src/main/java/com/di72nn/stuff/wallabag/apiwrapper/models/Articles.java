@@ -10,6 +10,12 @@ public class Articles {
 
 		public List<Article> items;
 
+		@Override
+		public String toString() {
+			return "Embedded{" +
+					"items" + (items == null ? "=null" : ("[" + items.size() + "]")) +
+					'}';
+		}
 	}
 
 	public int page;
@@ -22,5 +28,17 @@ public class Articles {
 
 	@Json(name = "_embedded")
 	public Embedded embedded;
+
+	@Override
+	public String toString() {
+		return "Articles{" +
+				"page=" + page +
+				", limit=" + limit +
+				", pages=" + pages +
+				", total=" + total +
+				", links=" + links +
+				", embedded=" + embedded +
+				'}';
+	}
 
 }

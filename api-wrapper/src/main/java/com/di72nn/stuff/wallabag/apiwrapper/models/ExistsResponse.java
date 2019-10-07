@@ -4,4 +4,11 @@ public class ExistsResponse {
 
 	public boolean exists;
 
+	@Override
+	public String toString() {
+		return "ExistsResponse{" +
+				"exists=" + exists +
+				'}';
+	}
+
 }

@@ -65,4 +65,13 @@ public class Article {
 	@Json(name = "uid")
 	public String publicUid;
 
+	@Override
+	public String toString() {
+		return "Article{" +
+				"id=" + id +
+				", url='" + url + '\'' +
+				", title='" + title + '\'' +
+				'}';
+	}
+
 }

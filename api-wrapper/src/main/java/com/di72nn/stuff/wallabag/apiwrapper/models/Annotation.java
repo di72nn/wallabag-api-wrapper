@@ -14,6 +14,15 @@ public class Annotation {
 		public long startOffset;
 		public long endOffset;
 
+		@Override
+		public String toString() {
+			return "Range{" +
+					"start='" + start + '\'' +
+					", end='" + end + '\'' +
+					", startOffset=" + startOffset +
+					", endOffset=" + endOffset +
+					'}';
+		}
 	}
 
 	public int id;
@@ -32,5 +41,18 @@ public class Annotation {
 	public String quote;
 
 	public List<Range> ranges;
+
+	@Override
+	public String toString() {
+		return "Annotation{" +
+				"id=" + id +
+				", annotatorSchemaVersion='" + annotatorSchemaVersion + '\'' +
+				", text='" + text + '\'' +
+				", createdAt=" + createdAt +
+				", updatedAt=" + updatedAt +
+				", quote='" + quote + '\'' +
+				", ranges=" + ranges +
+				'}';
+	}
 
 }

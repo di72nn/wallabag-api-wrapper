@@ -30,7 +30,10 @@ public class TokenResponse {
 
 	@Override
 	public String toString() {
-		return "accessToken: " + accessToken + ", refreshToken: " + refreshToken;
+		return "TokenResponse{" +
+				"accessToken='" + accessToken + '\'' +
+				", refreshToken='" + refreshToken + '\'' +
+				'}';
 	}
 
 }

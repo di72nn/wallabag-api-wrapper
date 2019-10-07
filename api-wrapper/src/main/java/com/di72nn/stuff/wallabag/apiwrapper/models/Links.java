@@ -6,11 +6,25 @@ public class Links {
 
 		public String href;
 
+		@Override
+		public String toString() {
+			return href;
+		}
 	}
 
 	public Link self;
 	public Link first;
 	public Link last;
 	public Link next;
+
+	@Override
+	public String toString() {
+		return "Links{" +
+				"self=" + self +
+				", first=" + first +
+				", last=" + last +
+				", next=" + next +
+				'}';
+	}
 
 }
