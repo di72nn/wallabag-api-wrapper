@@ -4,7 +4,7 @@ import com.squareup.moshi.Json;
 
 public class ExistsWithIdResponse {
 
-    @Json(name = "exists")
-    public Integer id;
+	@Json(name = "exists")
+	public Integer id;
 
 }
