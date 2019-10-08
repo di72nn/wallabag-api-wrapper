@@ -280,7 +280,6 @@ public class WallabagService {
 		return checkResponseBody(getAnnotationsCall(articleID).execute());
 	}
 
-	// TODO: turn into builder?
 	public Call<Annotation> addAnnotationCall(int articleID, List<Annotation.Range> ranges, String text, String quote) {
 		nonNegativeNumber(articleID, "articleID");
 		nonEmptyCollection(ranges, "ranges");
