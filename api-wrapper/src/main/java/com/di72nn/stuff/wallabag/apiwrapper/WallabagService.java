@@ -794,7 +794,6 @@ public class WallabagService {
 		return checkResponse(getTagsCall().execute()).body();
 	}
 
-	// always throws 404 because of server bug
 	public Call<Tag> deleteTagCall(String tagLabel) {
 		return wallabagApiService.deleteTag(nonEmptyString(tagLabel, "tagLabel"));
 	}
@@ -811,7 +810,6 @@ public class WallabagService {
 		return checkResponse(deleteTagCall(tagID).execute()).body();
 	}
 
-	// always throws 404 because of server bug
 	public Call<List<Tag>> deleteTagsCall(Collection<String> tags) {
 		return wallabagApiService.deleteTags(join(nonNullValue(tags, "tags"), ","));
 	}
