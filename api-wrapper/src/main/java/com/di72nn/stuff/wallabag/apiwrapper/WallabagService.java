@@ -45,485 +45,6 @@ public class WallabagService {
 
 	}
 
-	public enum SortCriterion {
-		CREATED("created"), UPDATED("updated");
-
-		private String value;
-
-		SortCriterion(String value) {
-			this.value = value;
-		}
-
-		public String apiValue() {
-			return value;
-		}
-
-	}
-
-	public enum SortOrder {
-		ASCENDING("asc"), DESCENDING("desc");
-
-		private String value;
-
-		SortOrder(String value) {
-			this.value = value;
-		}
-
-		public String apiValue() {
-			return value;
-		}
-
-	}
-
-	abstract static class AbstractTagsBuilder<T extends AbstractTagsBuilder<T>> {
-
-		Set<String> tags;
-
-		abstract T self();
-
-		public T tag(String tag) {
-			nonEmptyString(tag, "tag");
-
-			Set<String> tags = this.tags;
-			if(tags == null) {
-				this.tags = tags = new HashSet<>();
-			}
-			tags.add(tag);
-
-			return self();
-		}
-
-		public T tags(Collection<String> tags) {
-			nonEmptyCollection(tags, "tags");
-
-			Set<String> tagsLocal = this.tags;
-			if(tagsLocal == null) {
-				this.tags = tagsLocal = new HashSet<>(tags.size());
-			}
-			tagsLocal.addAll(tags);
-
-			return self();
-		}
-
-		String getTagsString() {
-			if(tags != null && !tags.isEmpty()) {
-				return Utils.join(tags, ",");
-			}
-			return null;
-		}
-
-		void copyTags(T copy) {
-			if(tags != null) copy.tags = new HashSet<>(tags);
-		}
-
-	}
-
-	public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuilder> {
-
-		private Boolean archive;
-		private Boolean starred;
-		private SortCriterion sortCriterion = SortCriterion.CREATED;
-		private SortOrder sortOrder = SortOrder.DESCENDING;
-		private int page = 1;
-		private int perPage = 30;
-		private long since = 0;
-		private Boolean isPublic;
-
-		private ArticlesQueryBuilder() {}
-
-		@Override
-		ArticlesQueryBuilder self() {
-			return this;
-		}
-
-		public ArticlesQueryBuilder archive(boolean archive) {
-			this.archive = archive;
-			return this;
-		}
-
-		public ArticlesQueryBuilder starred(boolean starred) {
-			this.starred = starred;
-			return this;
-		}
-
-		public ArticlesQueryBuilder sortCriterion(SortCriterion sortCriterion) {
-			this.sortCriterion = sortCriterion;
-			return this;
-		}
-
-		public ArticlesQueryBuilder sortOrder(SortOrder sortOrder) {
-			this.sortOrder = sortOrder;
-			return this;
-		}
-
-		public ArticlesQueryBuilder page(int page) {
-			this.page = positiveNumber(page, "page");
-			return this;
-		}
-
-		public ArticlesQueryBuilder perPage(int perPage) {
-			this.perPage = positiveNumber(perPage, "perPage");
-			return this;
-		}
-
-		public ArticlesQueryBuilder since(long since) {
-			this.since = since;
-			return this;
-		}
-
-		public ArticlesQueryBuilder setPublic(Boolean isPublic) {
-			this.isPublic = isPublic;
-			return this;
-		}
-
-		private Map<String, String> build() {
-			Map<String, String> parameters = new HashMap<>();
-
-			if(archive != null) parameters.put("archive", Utils.booleanToNumberString(archive));
-			if(starred != null) parameters.put("starred", Utils.booleanToNumberString(starred));
-			parameters.put("sort", sortCriterion.apiValue());
-			parameters.put("order", sortOrder.apiValue());
-			parameters.put("page", String.valueOf(page));
-			parameters.put("perPage", String.valueOf(perPage));
-			String tagsString = getTagsString();
-			if (tagsString != null) parameters.put("tags", tagsString);
-			parameters.put("since", String.valueOf(since));
-			if (isPublic != null) parameters.put("public", Utils.booleanToNumberString(isPublic));
-
-			return parameters;
-		}
-
-		public Call<Articles> buildCall() {
-			return getArticlesCall(build());
-		}
-
-		public Articles execute() throws IOException, UnsuccessfulResponseException {
-			return getArticles(build());
-		}
-
-		public ArticlesPageIterator pageIterator() {
-			return pageIterator(true);
-		}
-
-		public ArticlesPageIterator pageIterator(boolean notFoundAsEmpty) {
-			return new ArticlesPageIterator(copy(), notFoundAsEmpty);
-		}
-
-		private ArticlesQueryBuilder copy() {
-			ArticlesQueryBuilder copy = new ArticlesQueryBuilder();
-
-			copy.archive = archive;
-			copy.starred = starred;
-			copy.sortCriterion = sortCriterion;
-			copy.sortOrder = sortOrder;
-			copy.page = page;
-			copy.perPage = perPage;
-			copyTags(copy);
-			copy.since = since;
-			copy.isPublic = isPublic;
-
-			return copy;
-		}
-
-	}
-
-	abstract static class AbstractArticleBuilder<T extends AbstractArticleBuilder<T>> extends AbstractTagsBuilder<T> {
-
-		String title;
-		String content;
-		String language;
-		String previewPicture;
-		Boolean starred;
-		Boolean archive;
-		Date publishedAt;
-		List<String> authors;
-		Boolean isPublic;
-		String originUrl;
-
-		public T title(String title) {
-			this.title = nonEmptyString(title, "title");
-			return self();
-		}
-
-		public T content(String content) {
-			this.content = nonEmptyString(content, "content");
-			return self();
-		}
-
-		public T language(String language) {
-			this.language = nonEmptyString(language, "language");
-			return self();
-		}
-
-		public T previewPicture(String previewPicture) {
-			this.previewPicture = nonEmptyString(previewPicture, "previewPicture");
-			return self();
-		}
-
-		public T starred(boolean starred) {
-			this.starred = starred;
-			return self();
-		}
-
-		public T archive(boolean archive) {
-			this.archive = archive;
-			return self();
-		}
-
-		public T publishedAt(Date publishedAt) {
-			this.publishedAt = nonNullValue(publishedAt, "publishedAt");
-			return self();
-		}
-
-		public T author(String author) {
-			nonEmptyString(author, "author");
-
-			List<String> authors = this.authors;
-			if(authors == null) {
-				this.authors = authors = new ArrayList<>(1);
-			}
-			authors.add(author);
-
-			return self();
-		}
-
-		public T authors(Collection<String> authors) {
-			nonEmptyCollection(authors, "authors");
-
-			List<String> authorsLocal = this.authors;
-			if(authorsLocal == null) {
-				this.authors = authorsLocal = new ArrayList<>(authors.size());
-			}
-			authorsLocal.addAll(authors);
-
-			return self();
-		}
-
-		public T isPublic(boolean isPublic) {
-			this.isPublic = isPublic;
-			return self();
-		}
-
-		public T originUrl(String originUrl) {
-			this.originUrl = nonEmptyString(originUrl, "originUrl");
-			return self();
-		}
-
-		String getPublishedAtString() {
-			if (publishedAt != null) {
-				return String.valueOf(publishedAt.getTime() / 1000);
-			}
-			return null;
-		}
-
-		String getAuthorsString() {
-			if(authors != null && !authors.isEmpty()) {
-				return Utils.join(authors, ",");
-			}
-			return null;
-		}
-
-		FormBody.Builder populateFormBodyBuilder(FormBody.Builder bodyBuilder) {
-			addParameter(bodyBuilder, "title", title);
-			addParameter(bodyBuilder, "content", content);
-			addParameter(bodyBuilder, "language", language);
-			addParameter(bodyBuilder, "preview_picture", previewPicture);
-			addParameter(bodyBuilder, "starred", Utils.booleanToNullableNumberString(starred));
-			addParameter(bodyBuilder, "archive", Utils.booleanToNullableNumberString(archive));
-			addParameter(bodyBuilder, "published_at", getPublishedAtString());
-			addParameter(bodyBuilder, "authors", getAuthorsString());
-			addParameter(bodyBuilder, "tags", getTagsString());
-			addParameter(bodyBuilder, "public", Utils.booleanToNullableNumberString(isPublic));
-			addParameter(bodyBuilder, "origin_url", originUrl);
-
-			return bodyBuilder;
-		}
-
-		void addParameter(FormBody.Builder bodyBuilder, String paramName, String paramValue) {
-			if (paramValue != null) bodyBuilder.add(paramName, paramValue);
-		}
-
-	}
-
-	public class AddArticleBuilder extends AbstractArticleBuilder<AddArticleBuilder> {
-
-		final String url;
-
-		AddArticleBuilder(String url) {
-			this.url = nonEmptyString(url, "url");
-		}
-
-		@Override
-		AddArticleBuilder self() {
-			return this;
-		}
-
-		RequestBody build() {
-			FormBody.Builder bodyBuilder = new FormBody.Builder()
-					.add("url", url);
-
-			return populateFormBodyBuilder(bodyBuilder).build();
-		}
-
-		public Call<Article> buildCall() {
-			return addArticleCall(build());
-		}
-
-		public Article execute() throws IOException, UnsuccessfulResponseException {
-			return addArticle(build());
-		}
-
-	}
-
-	public class ModifyArticleBuilder extends AbstractArticleBuilder<ModifyArticleBuilder> {
-
-		final int id;
-
-		ModifyArticleBuilder(int id) {
-			this.id = nonNegativeNumber(id, "id");
-		}
-
-		@Override
-		ModifyArticleBuilder self() {
-			return this;
-		}
-
-		RequestBody build() {
-			FormBody formBody = populateFormBodyBuilder(new FormBody.Builder()).build();
-
-			if(formBody.size() == 0) {
-				throw new IllegalStateException("No changes done");
-			}
-
-			return formBody;
-		}
-
-		public Call<Article> buildCall() {
-			return modifyArticleCall(id, build());
-		}
-
-		public Article execute() throws IOException, UnsuccessfulResponseException {
-			return modifyArticle(id, build());
-		}
-
-	}
-
-	public class BatchExistQueryBuilder {
-
-		private int maxQueryLength;
-
-		@SuppressWarnings("ConstantConditions") // constant URL
-		private final HttpUrl.Builder builder = HttpUrl.parse("https://a").newBuilder();
-
-		private final List<String> urls = new ArrayList<>();
-		private int currentRequestLength;
-
-		private BatchExistQueryBuilder() {
-			this(3990);
-		}
-
-		private BatchExistQueryBuilder(int maxQueryLength) {
-			this.maxQueryLength = maxQueryLength;
-
-			reset();
-		}
-
-		public void reset() {
-			urls.clear();
-			currentRequestLength = apiBaseURL.length() + "/api/entries/exists.json".length();
-		}
-
-		public boolean addUrl(String url) {
-			nonNullValue(url, "url");
-
-			@SuppressWarnings("ConstantConditions") // always non-empty query
-			int parameterLength = builder.setQueryParameter("urls[]", url).build().encodedQuery().length() + 1;
-			if(currentRequestLength + parameterLength <= maxQueryLength) {
-				urls.add(url);
-				currentRequestLength += parameterLength;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		public Call<Map<String, Boolean>> buildCall() {
-			return articlesExistCall(urls);
-		}
-
-		public Call<Map<String, Integer>> buildCallWithId() {
-			return articlesExistWithIdCall(urls);
-		}
-
-		public Map<String, Boolean> execute() throws IOException, UnsuccessfulResponseException {
-			return articlesExist(urls);
-		}
-
-		public Map<String, Integer> executeWithId() throws IOException, UnsuccessfulResponseException {
-			return articlesExistWithId(urls);
-		}
-
-	}
-
-	public static class ArticlesPageIterator {
-
-		private static final Logger LOG = LoggerFactory.getLogger(ArticlesPageIterator.class);
-
-		private final ArticlesQueryBuilder queryBuilder;
-		private final boolean notFoundAsEmpty;
-
-		private int currentPage = 1;
-
-		private Articles articles;
-		private boolean ready;
-		private boolean lastPageReached;
-
-		private ArticlesPageIterator(ArticlesQueryBuilder articlesQueryBuilder, boolean notFoundAsEmpty) {
-			this.queryBuilder = articlesQueryBuilder;
-			this.notFoundAsEmpty = notFoundAsEmpty;
-		}
-
-		public boolean hasNext() throws IOException, UnsuccessfulResponseException {
-			if(ready) return true;
-			if(lastPageReached) return false;
-
-			Articles articles;
-			try {
-				articles = queryBuilder.page(currentPage++).execute();
-			} catch(NotFoundException nfe) {
-				if(!notFoundAsEmpty) {
-					throw nfe;
-				}
-
-				LOG.debug("Handling NFE as empty", nfe);
-				articles = null;
-			}
-
-			this.articles = articles;
-
-			if(articles != null) {
-				LOG.trace("Page: {}/{}, total articles: {}", articles.page, articles.pages, articles.total);
-
-				ready = true;
-				if(articles.page == articles.pages) lastPageReached = true;
-			} else {
-				LOG.trace("articles == null");
-			}
-
-			ready = articles != null;
-			return ready;
-		}
-
-		public Articles next() throws IOException, UnsuccessfulResponseException {
-			if(!hasNext()) throw new NoSuchElementException();
-
-			ready = false;
-			return articles;
-		}
-
-	}
-
 	// TODO: synchronization?
 	private class TokenRefreshingInterceptor implements Interceptor {
 
@@ -615,12 +136,16 @@ public class WallabagService {
 				.create(WallabagApiService.class);
 	}
 
+	String getApiBaseURL() {
+		return apiBaseURL;
+	}
+
 	public ArticlesQueryBuilder getArticlesBuilder() {
-		return new ArticlesQueryBuilder();
+		return new ArticlesQueryBuilder(this);
 	}
 
 	public AddArticleBuilder addArticleBuilder(String url) {
-		return new AddArticleBuilder(url);
+		return new AddArticleBuilder(this, url);
 	}
 
 	public Article addArticle(String url) throws IOException, UnsuccessfulResponseException {
@@ -628,22 +153,22 @@ public class WallabagService {
 	}
 
 	public ModifyArticleBuilder modifyArticleBuilder(int id) {
-		return new ModifyArticleBuilder(id);
+		return new ModifyArticleBuilder(this, id);
 	}
 
-	private Call<Articles> getArticlesCall(Map<String, String> parameters) {
+	Call<Articles> getArticlesCall(Map<String, String> parameters) {
 		return wallabagApiService.getArticles(parameters);
 	}
 
-	private Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
+	Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(getArticlesCall(parameters).execute()).body();
 	}
 
-	private Call<Article> addArticleCall(RequestBody requestBody) {
+	Call<Article> addArticleCall(RequestBody requestBody) {
 		return wallabagApiService.addArticle(requestBody);
 	}
 
-	private Article addArticle(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
+	Article addArticle(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
 		return checkResponse(addArticleCall(requestBody).execute()).body();
 	}
 
@@ -696,11 +221,11 @@ public class WallabagService {
 	}
 
 	public BatchExistQueryBuilder getArticlesExistQueryBuilder() {
-		return new BatchExistQueryBuilder();
+		return new BatchExistQueryBuilder(this);
 	}
 
 	public BatchExistQueryBuilder getArticlesExistQueryBuilder(int maxQueryLength) {
-		return new BatchExistQueryBuilder(maxQueryLength);
+		return new BatchExistQueryBuilder(this, maxQueryLength);
 	}
 
 	public Call<Article> deleteArticleCall(int articleID) {
@@ -744,11 +269,11 @@ public class WallabagService {
 		return exportArticleRaw(articleID, format).body();
 	}
 
-	private Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {
+	Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {
 		return wallabagApiService.modifyArticle(nonNegativeNumber(articleID, "articleID"), requestBody);
 	}
 
-	private Article modifyArticle(int articleID, RequestBody requestBody)
+	Article modifyArticle(int articleID, RequestBody requestBody)
 			throws IOException, UnsuccessfulResponseException {
 		return checkResponse(modifyArticleCall(articleID, requestBody).execute()).body();
 	}
