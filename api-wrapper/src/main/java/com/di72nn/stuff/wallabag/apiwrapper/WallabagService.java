@@ -20,15 +20,12 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 import java.io.IOException;
 import java.util.*;
 
+import static com.di72nn.stuff.wallabag.apiwrapper.Constants.*;
 import static com.di72nn.stuff.wallabag.apiwrapper.Utils.*;
 
 public class WallabagService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WallabagService.class);
-
-	// TODO: move somewhere?
-	private static final String GRANT_TYPE_PASSWORD = "password";
-	private static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
 
 	private final WallabagAuthService wallabagAuthService; // TODO: lazy init?
 	private final WallabagApiService wallabagApiService;
@@ -930,8 +927,8 @@ public class WallabagService {
 		LOG.info("started");
 
 		FormBody.Builder bodyBuilder = new FormBody.Builder()
-				.add("client_id", nonNullValue(parameterHandler.getClientID(), "clientID"))
-				.add("client_secret", nonNullValue(parameterHandler.getClientSecret(), "clientSecret"));
+				.add(CLIENT_ID_PARAM, nonNullValue(parameterHandler.getClientID(), "clientID"))
+				.add(CLIENT_SECRET_PARAM, nonNullValue(parameterHandler.getClientSecret(), "clientSecret"));
 
 		if(refresh) {
 			String refreshToken = parameterHandler.getRefreshToken();
@@ -939,12 +936,12 @@ public class WallabagService {
 				LOG.debug("Refresh token is empty or null");
 				return false;
 			}
-			bodyBuilder.add("grant_type", GRANT_TYPE_REFRESH_TOKEN)
-					.add("refresh_token", refreshToken);
+			bodyBuilder.add(GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN)
+					.add(REFRESH_TOKEN_PARAM, refreshToken);
 		} else {
-			bodyBuilder.add("grant_type", GRANT_TYPE_PASSWORD)
-					.add("username", nonNullValue(parameterHandler.getUsername(), "username"))
-					.add("password", nonNullValue(parameterHandler.getPassword(), "password"));
+			bodyBuilder.add(GRANT_TYPE, GRANT_TYPE_PASSWORD)
+					.add(USERNAME_PARAM, nonNullValue(parameterHandler.getUsername(), "username"))
+					.add(PASSWORD_PARAM, nonNullValue(parameterHandler.getPassword(), "password"));
 		}
 		RequestBody body = bodyBuilder.build();
 
@@ -963,13 +960,14 @@ public class WallabagService {
 	}
 
 	private Request.Builder setHeaders(Request.Builder requestBuilder) {
-		requestBuilder.addHeader("Accept", "*/*"); // compatibility
+		requestBuilder.addHeader(HTTP_ACCEPT_HEADER, HTTP_ACCEPT_VALUE_ANY); // compatibility
 
 		return setAuthHeader(requestBuilder);
 	}
 
 	private Request.Builder setAuthHeader(Request.Builder requestBuilder) {
-		return requestBuilder.addHeader("Authorization", "Bearer " + parameterHandler.getAccessToken());
+		return requestBuilder.addHeader(HTTP_AUTHORIZATION_HEADER,
+				HTTP_AUTHORIZATION_BEARER_VALUE + parameterHandler.getAccessToken());
 	}
 
 }
