@@ -93,7 +93,7 @@ public class WallabagService {
 	}
 
 	Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getArticlesCall(parameters).execute()).body();
+		return checkResponseBody(getArticlesCall(parameters).execute());
 	}
 
 	Call<Article> addArticleCall(RequestBody requestBody) {
@@ -101,7 +101,7 @@ public class WallabagService {
 	}
 
 	Article addArticle(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(addArticleCall(requestBody).execute()).body();
+		return checkResponseBody(addArticleCall(requestBody).execute());
 	}
 
 	public Call<Article> reloadArticleCall(int articleID) {
@@ -115,7 +115,7 @@ public class WallabagService {
 			return null;
 		}
 
-		return checkResponse(response).body();
+		return checkResponseBody(response);
 	}
 
 	public Call<ExistsResponse> articleExistsCall(String url) {
@@ -123,7 +123,7 @@ public class WallabagService {
 	}
 
 	public boolean articleExists(String url) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(articleExistsCall(url).execute()).body().exists;
+		return checkResponseBody(articleExistsCall(url).execute()).exists;
 	}
 
 	public Call<ExistsWithIdResponse> articleExistsWithIdCall(String url) {
@@ -131,7 +131,7 @@ public class WallabagService {
 	}
 
 	public Integer articleExistsWithId(String url) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(articleExistsWithIdCall(url).execute()).body().id;
+		return checkResponseBody(articleExistsWithIdCall(url).execute()).id;
 	}
 
 	public Call<Map<String, Boolean>> articlesExistCall(Collection<String> urls) {
@@ -140,7 +140,7 @@ public class WallabagService {
 
 	public Map<String, Boolean> articlesExist(Collection<String> urls)
 			throws IOException, UnsuccessfulResponseException {
-		return checkResponse(articlesExistCall(urls).execute()).body();
+		return checkResponseBody(articlesExistCall(urls).execute());
 	}
 
 	public Call<Map<String, Integer>> articlesExistWithIdCall(Collection<String> urls) {
@@ -149,7 +149,7 @@ public class WallabagService {
 
 	public Map<String, Integer> articlesExistWithId(Collection<String> urls)
 			throws IOException, UnsuccessfulResponseException {
-		return checkResponse(articlesExistWithIdCall(urls).execute()).body();
+		return checkResponseBody(articlesExistWithIdCall(urls).execute());
 	}
 
 	public BatchExistQueryBuilder getArticlesExistQueryBuilder() {
@@ -165,7 +165,7 @@ public class WallabagService {
 	}
 
 	public Article deleteArticle(int articleID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteArticleCall(articleID).execute()).body();
+		return checkResponseBody(deleteArticleCall(articleID).execute());
 	}
 
 	public Call<DeleteWithIdResponse> deleteArticleWithIdCall(int articleID) {
@@ -173,7 +173,7 @@ public class WallabagService {
 	}
 
 	public Integer deleteArticleWithId(int articleID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteArticleWithIdCall(articleID).execute()).body().id;
+		return checkResponseBody(deleteArticleWithIdCall(articleID).execute()).id;
 	}
 
 	public Call<Article> getArticleCall(int articleID) {
@@ -181,7 +181,7 @@ public class WallabagService {
 	}
 
 	public Article getArticle(int articleID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getArticleCall(articleID).execute()).body();
+		return checkResponseBody(getArticleCall(articleID).execute());
 	}
 
 	public Call<ResponseBody> exportArticleCall(int articleID, ResponseFormat format) {
@@ -207,7 +207,7 @@ public class WallabagService {
 
 	Article modifyArticle(int articleID, RequestBody requestBody)
 			throws IOException, UnsuccessfulResponseException {
-		return checkResponse(modifyArticleCall(articleID, requestBody).execute()).body();
+		return checkResponseBody(modifyArticleCall(articleID, requestBody).execute());
 	}
 
 	public Call<List<Tag>> getTagsCall(int articleID) {
@@ -215,7 +215,7 @@ public class WallabagService {
 	}
 
 	public List<Tag> getTags(int articleID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getTagsCall(articleID).execute()).body();
+		return checkResponseBody(getTagsCall(articleID).execute());
 	}
 
 	public Call<Article> addTagsCall(int articleID, Collection<String> tags) {
@@ -226,7 +226,7 @@ public class WallabagService {
 	}
 
 	public Article addTags(int articleID, Collection<String> tags) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(addTagsCall(articleID, tags).execute()).body();
+		return checkResponseBody(addTagsCall(articleID, tags).execute());
 	}
 
 	public Call<Article> deleteTagCall(int articleID, int tagID) {
@@ -237,7 +237,7 @@ public class WallabagService {
 	}
 
 	public Article deleteTag(int articleID, int tagID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteTagCall(articleID, tagID).execute()).body();
+		return checkResponseBody(deleteTagCall(articleID, tagID).execute());
 	}
 
 	public Call<List<Tag>> getTagsCall() {
@@ -245,7 +245,7 @@ public class WallabagService {
 	}
 
 	public List<Tag> getTags() throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getTagsCall().execute()).body();
+		return checkResponseBody(getTagsCall().execute());
 	}
 
 	public Call<Tag> deleteTagCall(String tagLabel) {
@@ -253,7 +253,7 @@ public class WallabagService {
 	}
 
 	public Tag deleteTag(String tagLabel) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteTagCall(tagLabel).execute()).body();
+		return checkResponseBody(deleteTagCall(tagLabel).execute());
 	}
 
 	public Call<Tag> deleteTagCall(int tagID) {
@@ -261,7 +261,7 @@ public class WallabagService {
 	}
 
 	public Tag deleteTag(int tagID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteTagCall(tagID).execute()).body();
+		return checkResponseBody(deleteTagCall(tagID).execute());
 	}
 
 	public Call<List<Tag>> deleteTagsCall(Collection<String> tags) {
@@ -269,7 +269,7 @@ public class WallabagService {
 	}
 
 	public List<Tag> deleteTags(Collection<String> tags) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteTagsCall(tags).execute()).body();
+		return checkResponseBody(deleteTagsCall(tags).execute());
 	}
 
 	public Call<Annotations> getAnnotationsCall(int articleID)  {
@@ -277,7 +277,7 @@ public class WallabagService {
 	}
 
 	public Annotations getAnnotations(int articleID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getAnnotationsCall(articleID).execute()).body();
+		return checkResponseBody(getAnnotationsCall(articleID).execute());
 	}
 
 	// TODO: turn into builder?
@@ -297,7 +297,7 @@ public class WallabagService {
 
 	public Annotation addAnnotation(int articleID, List<Annotation.Range> ranges, String text, String quote)
 			throws IOException, UnsuccessfulResponseException {
-		return checkResponse(addAnnotationCall(articleID, ranges, text, quote).execute()).body();
+		return checkResponseBody(addAnnotationCall(articleID, ranges, text, quote).execute());
 	}
 
 	public Call<Annotation> updateAnnotationCall(int annotationID, String text) {
@@ -312,7 +312,7 @@ public class WallabagService {
 
 	public Annotation updateAnnotation(int annotationID, String text)
 			throws IOException, UnsuccessfulResponseException {
-		return checkResponse(updateAnnotationCall(annotationID, text).execute()).body();
+		return checkResponseBody(updateAnnotationCall(annotationID, text).execute());
 	}
 
 	public Call<Annotation> deleteAnnotationCall(int annotationID) {
@@ -320,7 +320,7 @@ public class WallabagService {
 	}
 
 	public Annotation deleteAnnotation(int annotationID) throws IOException, UnsuccessfulResponseException {
-		return checkResponse(deleteAnnotationCall(annotationID).execute()).body();
+		return checkResponseBody(deleteAnnotationCall(annotationID).execute());
 	}
 
 	public Call<String> getVersionCall() {
@@ -328,7 +328,7 @@ public class WallabagService {
 	}
 
 	public String getVersion() throws IOException, UnsuccessfulResponseException {
-		return checkResponse(getVersionCall().execute()).body();
+		return checkResponseBody(getVersionCall().execute());
 	}
 
 	String getServerVersion() throws IOException, UnsuccessfulResponseException {
@@ -339,21 +339,30 @@ public class WallabagService {
 		return serverVersion;
 	}
 
+	private <T> T checkResponseBody(Response<T> response) throws IOException, UnsuccessfulResponseException {
+		T body = checkResponse(response).body();
+		if (body == null) { // AFAIK should not happen
+			throw new UnsuccessfulResponseException(response.code(), "Response is empty", null);
+		}
+		return body;
+	}
+
 	private <T> Response<T> checkResponse(Response<T> response) throws IOException, UnsuccessfulResponseException {
 		if(!response.isSuccessful()) {
+			String bodyString = response.errorBody() != null ? response.errorBody().string() : null;
 			switch(response.code()) {
 				case 400:
 				case 401:
 					throw new AuthorizationException(
-							response.code(), response.message(), response.errorBody().string());
+							response.code(), response.message(), bodyString);
 
 				case 404:
 					throw new NotFoundException(
-							response.code(), response.message(), response.errorBody().string());
+							response.code(), response.message(), bodyString);
 
 				default:
 					throw new UnsuccessfulResponseException(
-							response.code(), response.message(), response.errorBody().string());
+							response.code(), response.message(), bodyString);
 			}
 		}
 
