@@ -6,31 +6,24 @@ import com.di72nn.stuff.wallabag.apiwrapper.exceptions.NotFoundException;
 import com.di72nn.stuff.wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import com.di72nn.stuff.wallabag.apiwrapper.models.*;
 import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagApiService;
-import com.di72nn.stuff.wallabag.apiwrapper.services.WallabagAuthService;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
-import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import retrofit2.*;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 
 import java.io.IOException;
 import java.util.*;
 
-import static com.di72nn.stuff.wallabag.apiwrapper.Constants.*;
 import static com.di72nn.stuff.wallabag.apiwrapper.Utils.*;
 
 public class WallabagService {
 
-	private static final Logger LOG = LoggerFactory.getLogger(WallabagService.class);
-
-	private final WallabagAuthService wallabagAuthService; // TODO: lazy init?
 	private final WallabagApiService wallabagApiService;
-
-	private final ParameterHandler parameterHandler;
 
 	private final String apiBaseURL;
 
@@ -45,84 +38,23 @@ public class WallabagService {
 
 	}
 
-	// TODO: synchronization?
-	private class TokenRefreshingInterceptor implements Interceptor {
-
-		@Override
-		public okhttp3.Response intercept(Chain chain) throws IOException {
-			LOG.debug("intercept() started");
-
-			Request originalRequest = chain.request();
-
-			Request request = setHeaders(originalRequest.newBuilder()).build();
-			okhttp3.Response response = chain.proceed(request);
-
-			LOG.debug("intercept() got response");
-			if(!response.isSuccessful()) {
-				LOG.info("intercept() unsuccessful response; code: " + response.code());
-
-				if(response.code() == 401) {
-					ResponseBody body = response.body();
-					LOG.debug("response body: " + (body != null ? body.string() : null));
-
-					try {
-						if(getAccessToken()) {
-							request = setHeaders(originalRequest.newBuilder()).build();
-							response = chain.proceed(request);
-						}
-					} catch(GetTokenException e) {
-						LOG.debug("Got GetTokenException");
-
-						Response<TokenResponse> tokenResponse = e.getResponse();
-						response = tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
-					}
-				}
-			}
-
-			return response;
-		}
-
-	}
-
-	private static class GetTokenException extends Exception {
-
-		private retrofit2.Response<TokenResponse> response;
-
-		GetTokenException(Response<TokenResponse> response) {
-			this.response = response;
-		}
-
-		Response<TokenResponse> getResponse() {
-			return response;
-		}
-
-	}
-
 	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler) {
 		this(apiBaseURL, parameterHandler, null);
 	}
 
 	public WallabagService(String apiBaseURL, ParameterHandler parameterHandler, OkHttpClient okHttpClient) {
 		nonEmptyString(apiBaseURL, "apiBaseURL");
-		if(parameterHandler == null) {
-			throw new NullPointerException("parameterHandler is null");
-		}
+		nonNullValue(parameterHandler, "parameterHandler");
 
 		if(!apiBaseURL.endsWith("/")) apiBaseURL += "/";
 
 		this.apiBaseURL = apiBaseURL;
-		this.parameterHandler = parameterHandler;
 
 		if(okHttpClient == null) okHttpClient = new OkHttpClient();
 
-		wallabagAuthService = new Retrofit.Builder()
-				.addConverterFactory(MoshiConverterFactory.create())
-				.client(okHttpClient)
-				.baseUrl(apiBaseURL)
-				.build()
-				.create(WallabagAuthService.class);
-
-		okHttpClient = okHttpClient.newBuilder().addInterceptor(new TokenRefreshingInterceptor()).build();
+		okHttpClient = okHttpClient.newBuilder()
+				.addInterceptor(new TokenRefreshingInterceptor(apiBaseURL, okHttpClient, parameterHandler))
+				.build();
 
 		wallabagApiService = new Retrofit.Builder()
 				.addConverterFactory(MoshiConverterFactory.create(
@@ -426,73 +358,6 @@ public class WallabagService {
 		}
 
 		return response;
-	}
-
-	private boolean getAccessToken() throws IOException, GetTokenException {
-		LOG.info("Access token requested");
-
-		LOG.info("Refreshing token");
-		try {
-			if(getAccessToken(true)) return true;
-		} catch(GetTokenException e) {
-			LOG.debug("GetTokenException");
-
-			Response<TokenResponse> response = e.getResponse();
-			if(response.code() != 400) { // also handle 401?
-				LOG.warn("Unexpected error code: " + response.code());
-				throw e;
-			}
-		}
-
-		LOG.info("Requesting new token");
-		return getAccessToken(false);
-	}
-
-	private boolean getAccessToken(boolean refresh) throws IOException, GetTokenException {
-		LOG.info("started");
-
-		FormBody.Builder bodyBuilder = new FormBody.Builder()
-				.add(CLIENT_ID_PARAM, nonNullValue(parameterHandler.getClientID(), "clientID"))
-				.add(CLIENT_SECRET_PARAM, nonNullValue(parameterHandler.getClientSecret(), "clientSecret"));
-
-		if(refresh) {
-			String refreshToken = parameterHandler.getRefreshToken();
-			if(refreshToken == null || refreshToken.isEmpty()) {
-				LOG.debug("Refresh token is empty or null");
-				return false;
-			}
-			bodyBuilder.add(GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN)
-					.add(REFRESH_TOKEN_PARAM, refreshToken);
-		} else {
-			bodyBuilder.add(GRANT_TYPE, GRANT_TYPE_PASSWORD)
-					.add(USERNAME_PARAM, nonNullValue(parameterHandler.getUsername(), "username"))
-					.add(PASSWORD_PARAM, nonNullValue(parameterHandler.getPassword(), "password"));
-		}
-		RequestBody body = bodyBuilder.build();
-
-		Call<TokenResponse> tokenResponseCall = wallabagAuthService.token(body);
-		Response<TokenResponse> response = tokenResponseCall.execute();
-
-		if(!response.isSuccessful()) {
-			throw new GetTokenException(response);
-		}
-
-		TokenResponse tokenResponse = response.body();
-		boolean result = parameterHandler.tokensUpdated(tokenResponse);
-
-		LOG.info("finished; result: {}", result);
-		return result;
-	}
-
-	private Request.Builder setHeaders(Request.Builder requestBuilder) {
-		requestBuilder.addHeader(HTTP_ACCEPT_HEADER, HTTP_ACCEPT_VALUE_ANY); // compatibility
-
-		return setAuthHeader(requestBuilder);
-	}
-
-	private Request.Builder setAuthHeader(Request.Builder requestBuilder) {
-		return requestBuilder.addHeader(HTTP_AUTHORIZATION_HEADER,
-				HTTP_AUTHORIZATION_BEARER_VALUE + parameterHandler.getAccessToken());
 	}
 
 }
