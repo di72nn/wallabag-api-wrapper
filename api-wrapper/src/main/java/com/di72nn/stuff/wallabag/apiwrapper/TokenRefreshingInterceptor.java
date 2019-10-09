@@ -14,7 +14,7 @@ import java.io.IOException;
 import static com.di72nn.stuff.wallabag.apiwrapper.Constants.*;
 import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonNullValue;
 
-class TokenRefreshingInterceptor implements Interceptor { // TODO: synchronization?
+class TokenRefreshingInterceptor implements Interceptor {
 
 	private static class GetTokenException extends Exception {
 
@@ -35,6 +35,8 @@ class TokenRefreshingInterceptor implements Interceptor { // TODO: synchronizati
 	private final WallabagAuthService wallabagAuthService; // TODO: lazy init?
 
 	private final ParameterHandler parameterHandler;
+
+	private final Object tokenUpdateLock = new Object();
 
 	TokenRefreshingInterceptor(String apiBaseURL, OkHttpClient okHttpClient, ParameterHandler parameterHandler) {
 		wallabagAuthService = new Retrofit.Builder()
@@ -64,16 +66,28 @@ class TokenRefreshingInterceptor implements Interceptor { // TODO: synchronizati
 				ResponseBody body = response.body();
 				LOG.debug("intercept() response body: " + (body != null ? body.string() : null));
 
-				try {
-					if(getAccessToken()) {
+				synchronized (tokenUpdateLock) {
+					boolean successfullyUpdatedToken = false;
+					try {
+						if(getAccessToken()) {
+							successfullyUpdatedToken = true;
+						}
+					} catch(GetTokenException e) {
+						LOG.debug("intercept() got GetTokenException");
+
+						response.close();
+
+						Response<TokenResponse> tokenResponse = e.getResponse();
+						response = tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
+					}
+
+					if (successfullyUpdatedToken) {
+						response.close();
+
+						// retry the original request
 						request = setHeaders(originalRequest.newBuilder()).build();
 						response = chain.proceed(request);
 					}
-				} catch(GetTokenException e) {
-					LOG.debug("intercept() got GetTokenException");
-
-					Response<TokenResponse> tokenResponse = e.getResponse();
-					response = tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
 				}
 			}
 		}
@@ -134,8 +148,7 @@ class TokenRefreshingInterceptor implements Interceptor { // TODO: synchronizati
 		}
 		RequestBody body = bodyBuilder.build();
 
-		retrofit2.Call<TokenResponse> tokenResponseCall = wallabagAuthService.token(body);
-		Response<TokenResponse> response = tokenResponseCall.execute();
+		Response<TokenResponse> response = wallabagAuthService.token(body).execute();
 
 		if(!response.isSuccessful()) {
 			throw new GetTokenException(response);
