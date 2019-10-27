@@ -11,6 +11,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Ignore this.
+ */
 public interface WallabagApiService {
 
 	@GET("api/entries.json")

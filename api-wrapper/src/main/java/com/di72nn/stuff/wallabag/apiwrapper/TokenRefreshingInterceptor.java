@@ -12,7 +12,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory;
 import java.io.IOException;
 
 import static com.di72nn.stuff.wallabag.apiwrapper.Constants.*;
-import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonNullValue;
+import static com.di72nn.stuff.wallabag.apiwrapper.Utils.isEmpty;
 
 class TokenRefreshingInterceptor implements Interceptor {
 
@@ -102,8 +102,11 @@ class TokenRefreshingInterceptor implements Interceptor {
 	}
 
 	private Request.Builder setAuthHeader(Request.Builder requestBuilder) {
+		String accessToken = parameterHandler.getAccessToken();
+		if (isEmpty(accessToken)) return requestBuilder;
+
 		return requestBuilder.addHeader(HTTP_AUTHORIZATION_HEADER,
-				HTTP_AUTHORIZATION_BEARER_VALUE + parameterHandler.getAccessToken());
+				HTTP_AUTHORIZATION_BEARER_VALUE + accessToken);
 	}
 
 	private boolean getAccessToken() throws IOException, GetTokenException {
@@ -129,22 +132,35 @@ class TokenRefreshingInterceptor implements Interceptor {
 	private boolean getAccessToken(boolean refresh) throws IOException, GetTokenException {
 		LOG.info("getAccessToken(" + refresh + ") started");
 
+		String clientID = parameterHandler.getClientID();
+		String clientSecret = parameterHandler.getClientSecret();
+		if (isEmpty(clientID) || isEmpty(clientSecret)) {
+			LOG.debug("getAccessToken() clientID and/or clientSecret is empty or null, aborting");
+			return false;
+		}
+
 		FormBody.Builder bodyBuilder = new FormBody.Builder()
-				.add(CLIENT_ID_PARAM, nonNullValue(parameterHandler.getClientID(), "clientID"))
-				.add(CLIENT_SECRET_PARAM, nonNullValue(parameterHandler.getClientSecret(), "clientSecret"));
+				.add(CLIENT_ID_PARAM, clientID)
+				.add(CLIENT_SECRET_PARAM, clientSecret);
 
 		if(refresh) {
 			String refreshToken = parameterHandler.getRefreshToken();
-			if(refreshToken == null || refreshToken.isEmpty()) {
-				LOG.debug("getAccessToken() refresh token is empty or null");
+			if (isEmpty(refreshToken)) {
+				LOG.debug("getAccessToken() refresh token is empty or null, aborting");
 				return false;
 			}
 			bodyBuilder.add(GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN)
 					.add(REFRESH_TOKEN_PARAM, refreshToken);
 		} else {
+			String username = parameterHandler.getUsername();
+			String password = parameterHandler.getPassword();
+			if (isEmpty(username) || isEmpty(password)) {
+				LOG.debug("getAccessToken() username and/or password is empty or null, aborting");
+				return false;
+			}
 			bodyBuilder.add(GRANT_TYPE, GRANT_TYPE_PASSWORD)
-					.add(USERNAME_PARAM, nonNullValue(parameterHandler.getUsername(), "username"))
-					.add(PASSWORD_PARAM, nonNullValue(parameterHandler.getPassword(), "password"));
+					.add(USERNAME_PARAM, username)
+					.add(PASSWORD_PARAM, password);
 		}
 		RequestBody body = bodyBuilder.build();
 

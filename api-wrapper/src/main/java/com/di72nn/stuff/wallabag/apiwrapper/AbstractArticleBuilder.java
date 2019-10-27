@@ -1,5 +1,6 @@
 package com.di72nn.stuff.wallabag.apiwrapper;
 
+import com.di72nn.stuff.wallabag.apiwrapper.models.Article;
 import okhttp3.FormBody;
 
 import java.util.ArrayList;
@@ -11,52 +12,110 @@ import static com.di72nn.stuff.wallabag.apiwrapper.Utils.*;
 
 abstract class AbstractArticleBuilder<T extends AbstractArticleBuilder<T>> extends AbstractTagsBuilder<T> {
 
-	String title;
-	String content;
-	String language;
-	String previewPicture;
-	Boolean starred;
-	Boolean archive;
-	Date publishedAt;
-	List<String> authors;
-	Boolean isPublic;
-	String originUrl;
+	protected String title;
+	protected String content;
+	protected String language;
+	protected String previewPicture;
+	protected Boolean starred;
+	protected Boolean archive;
+	protected Date publishedAt;
+	protected List<String> authors;
+	protected Boolean isPublic;
+	protected String originUrl;
 
+	/**
+	 * Sets the article title to this builder, returns the builder.
+	 * <p>Empty or {@code null} strings are not passed in the request.
+	 *
+	 * @param title the title to set, {@code null}able
+	 * @return this builder
+	 */
 	public T title(String title) {
-		this.title = nonEmptyString(title, "title");
+		this.title = title;
 		return self();
 	}
 
+	/**
+	 * Sets the article content to this builder, returns the builder.
+	 * <p>Empty or {@code null} strings are not passed in the request.
+	 *
+	 * @param content the content to set, {@code null}able
+	 * @return this builder
+	 */
 	public T content(String content) {
-		this.content = nonEmptyString(content, "content");
+		this.content = content;
 		return self();
 	}
 
+	/**
+	 * Sets the article language to this builder, returns the builder.
+	 * <p>Empty or {@code null} strings are not passed in the request.
+	 *
+	 * @param language the language to set, {@code null}able
+	 * @return this builder
+	 */
 	public T language(String language) {
-		this.language = nonEmptyString(language, "language");
+		this.language = language;
 		return self();
 	}
 
+	/**
+	 * Sets the article preview picture URL to this builder, returns the builder.
+	 * <p>Empty or {@code null} strings are not passed in the request.
+	 *
+	 * @param previewPicture the preview picture URL to set, {@code null}able
+	 * @return this builder
+	 */
 	public T previewPicture(String previewPicture) {
-		this.previewPicture = nonEmptyString(previewPicture, "previewPicture");
+		this.previewPicture = previewPicture;
 		return self();
 	}
 
-	public T starred(boolean starred) {
+	/**
+	 * Sets the "starred" ("favorite") article parameter to this builder, returns the builder.
+	 * <p>{@code null} value is not passed in the request.
+	 *
+	 * @param starred the "starred" ("favorite") parameter to set, {@code null}able
+	 * @return this builder
+	 */
+	public T starred(Boolean starred) {
 		this.starred = starred;
 		return self();
 	}
 
-	public T archive(boolean archive) {
+	/**
+	 * Sets the "archive" ("read") article parameter to this builder, returns the builder.
+	 * <p>{@code null} value is not passed in the request.
+	 *
+	 * @param archive the "archive" ("read") parameter to set, {@code null}able
+	 * @return this builder
+	 */
+	public T archive(Boolean archive) {
 		this.archive = archive;
 		return self();
 	}
 
+	/**
+	 * Sets the article publication date to this builder, returns the builder.
+	 * <p>{@code null} value is not passed in the request.
+	 *
+	 * @param publishedAt the publication date to set, {@code null}able
+	 * @return this builder
+	 */
 	public T publishedAt(Date publishedAt) {
-		this.publishedAt = nonNullValue(publishedAt, "publishedAt");
+		this.publishedAt = publishedAt;
 		return self();
 	}
 
+	/**
+	 * Adds an author parameter to this builder, returns the builder.
+	 * Duplicates are silently ignored.
+	 *
+	 * @param author the author to add
+	 * @return this builder
+	 * @throws NullPointerException if the {@code author} is {@code null}
+	 * @throws IllegalArgumentException if the {@code author} is an empty {@code String}
+	 */
 	public T author(String author) {
 		nonEmptyString(author, "author");
 
@@ -69,43 +128,80 @@ abstract class AbstractArticleBuilder<T extends AbstractArticleBuilder<T>> exten
 		return self();
 	}
 
+	/**
+	 * Adds authors from the specified {@code Collection} to this builder, returns the builder.
+	 * Duplicates are silently ignored.
+	 *
+	 * @param authors the authors to add
+	 * @return this builder
+	 * @throws NullPointerException if the {@code authors} collection is {@code null} or if it contains a {@code null}
+	 * @throws IllegalArgumentException if the {@code authors} collection contains an empty {@code String}
+	 */
 	public T authors(Collection<String> authors) {
-		nonEmptyCollection(authors, "authors");
+		nonNullValue(authors, "authors");
 
-		List<String> authorsLocal = this.authors;
-		if(authorsLocal == null) {
-			this.authors = authorsLocal = new ArrayList<>(authors.size());
+		if (!authors.isEmpty()) {
+			if (this.authors == null) {
+				this.authors = new ArrayList<>(authors.size());
+			}
+
+			for (String author : authors) {
+				author(author);
+			}
 		}
-		authorsLocal.addAll(authors);
 
 		return self();
 	}
 
-	public T isPublic(boolean isPublic) {
+	/**
+	 * Resets the authors that were previously added to this builder, returns the builder.
+	 * @return this builder
+	 */
+	public T resetAuthors() {
+		if (authors != null) authors.clear();
+		return self();
+	}
+
+	/**
+	 * Sets the "public" article parameter to this builder, returns the builder.
+	 * Setting it to {@code true} makes the article public, see {@link Article#publicUid}.
+	 * <p>{@code null} value is not passed in the request.
+	 *
+	 * @param isPublic the "public" parameter to set, {@code null}able
+	 * @return this builder
+	 */
+	public T isPublic(Boolean isPublic) {
 		this.isPublic = isPublic;
 		return self();
 	}
 
+	/**
+	 * Sets the article origin URL to this builder, returns the builder.
+	 * <p>Empty or {@code null} strings are not passed in the request.
+	 *
+	 * @param originUrl the origin URL to set, {@code null}able
+	 * @return this builder
+	 */
 	public T originUrl(String originUrl) {
-		this.originUrl = nonEmptyString(originUrl, "originUrl");
+		this.originUrl = originUrl;
 		return self();
 	}
 
-	String getPublishedAtString() {
+	protected String getPublishedAtString() {
 		if (publishedAt != null) {
 			return String.valueOf(publishedAt.getTime() / 1000);
 		}
 		return null;
 	}
 
-	String getAuthorsString() {
+	protected String getAuthorsString() {
 		if(authors != null && !authors.isEmpty()) {
 			return Utils.join(authors, ",");
 		}
 		return null;
 	}
 
-	FormBody.Builder populateFormBodyBuilder(FormBody.Builder bodyBuilder) {
+	protected FormBody.Builder populateFormBodyBuilder(FormBody.Builder bodyBuilder) {
 		addParameter(bodyBuilder, "title", title);
 		addParameter(bodyBuilder, "content", content);
 		addParameter(bodyBuilder, "language", language);
@@ -121,8 +217,8 @@ abstract class AbstractArticleBuilder<T extends AbstractArticleBuilder<T>> exten
 		return bodyBuilder;
 	}
 
-	void addParameter(FormBody.Builder bodyBuilder, String paramName, String paramValue) {
-		if (paramValue != null) bodyBuilder.add(paramName, paramValue);
+	protected void addParameter(FormBody.Builder bodyBuilder, String paramName, String paramValue) {
+		if (!isEmpty(paramValue)) bodyBuilder.add(paramName, paramValue);
 	}
 
 }

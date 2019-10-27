@@ -6,6 +6,16 @@ import java.io.IOException;
 
 import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonNullValue;
 
+/**
+ * The {@code CompatibilityHelper} class contains methods for determining whether particular API features
+ * are available in a given server version.
+ * The naming of the methods is loosely based on the names of the corresponding {@link WallabagService} methods.
+ * <p>All methods accept a {@code String} version as returned by {@link WallabagService#getVersion()}
+ * or a {@link WallabagService} instance, in which case the {@link WallabagService#getCachedVersion()} is used.
+ * <p>The information is hardcoded in this class.
+ * The first known version is {@code 2.1.3} which is considered "a base version" ({@link #isBaseSupported(String)}).
+ * Earlier server versions may work, but lack some features.
+ */
 public class CompatibilityHelper {
 
 	private static final int VERSION_CODE_OLDER = 0;
@@ -15,22 +25,79 @@ public class CompatibilityHelper {
 	private static final int VERSION_CODE_2_3_7 = 2030700;
 	private static final int VERSION_CODE_NEWER = 999999999;
 
+	/**
+	 * Returns {@code true} if {@link WallabagService#getArticle(int)} and {@link WallabagService#getArticlesBuilder()}
+	 * methods are supported. Equivalent to {@link #isBaseSupported(String)}.
+	 *
+	 * @param serverVersion the version to check
+	 * @return {@code true} if basic article getting methods are supported
+	 */
 	public static boolean isGetArticlesSupported(String serverVersion) {
 		return isBaseSupported(serverVersion);
 	}
 
+	/**
+	 * Returns {@code true} if {@link WallabagService#getArticle(int)} and {@link WallabagService#getArticlesBuilder()}
+	 * methods are supported. Equivalent to {@link #isBaseSupported(String)}.
+	 *
+	 * @param wallabagService the {@link WallabagService} instance to get version from
+	 * @return {@code true} if basic article getting methods are supported
+	 * @throws IOException in case of network errors
+	 * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+	 */
 	public static boolean isGetArticlesSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isGetArticlesSupported(wallabagService.getServerVersion());
+		return isGetArticlesSupported(wallabagService.getCachedVersion());
 	}
 
+	/**
+	 * Returns {@code true} if {@link WallabagService#addArticle(String)} and {@link WallabagService#addArticleBuilder(String)}
+	 * methods are supported. Equivalent to {@link #isBaseSupported(String)}.
+	 *
+	 * @param serverVersion the version to check
+	 * @return {@code true} if article adding methods are supported
+	 */
 	public static boolean isAddArticleSupported(String serverVersion) {
 		return isBaseSupported(serverVersion);
 	}
 
+	/**
+	 * Returns {@code true} if {@link WallabagService#addArticle(String)} and {@link WallabagService#addArticleBuilder(String)}
+	 * methods are supported. Equivalent to {@link #isBaseSupported(String)}.
+	 *
+	 * @param wallabagService the {@link WallabagService} instance to get version from
+	 * @return {@code true} if article adding methods are supported
+	 * @throws IOException in case of network errors
+	 * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+	 */
 	public static boolean isAddArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isAddArticleSupported(wallabagService.getServerVersion());
+		return isAddArticleSupported(wallabagService.getCachedVersion());
+	}
+
+	/**
+	 * Returns {@code true} if the server supports adding articles with
+	 * directly provided {@link AddArticleBuilder#content(String)}.
+	 *
+	 * @param serverVersion the version to check
+	 * @return {@code true} if advanced article adding methods are supported
+	 */
+	public static boolean isAddArticleWithContentSupported(String serverVersion) {
+		return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
+	}
+
+	/**
+	 * Returns {@code true} if the server supports adding articles with
+	 * directly provided {@link AddArticleBuilder#content(String)}.
+	 *
+	 * @param wallabagService the {@link WallabagService} instance to get version from
+	 * @return {@code true} if advanced article adding methods are supported
+	 * @throws IOException in case of network errors
+	 * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+	 */
+	public static boolean isAddArticleWithContentSupported(WallabagService wallabagService)
+			throws IOException, UnsuccessfulResponseException {
+		return isAddArticleWithContentSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isReloadArticleSupported(String serverVersion) {
@@ -39,7 +106,7 @@ public class CompatibilityHelper {
 
 	public static boolean isReloadArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isReloadArticleSupported(wallabagService.getServerVersion());
+		return isReloadArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isArticleExistsSupported(String serverVersion) {
@@ -48,7 +115,7 @@ public class CompatibilityHelper {
 
 	public static boolean isArticleExistsSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isArticleExistsSupported(wallabagService.getServerVersion());
+		return isArticleExistsSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isArticleExistsWithIdSupported(String serverVersion) {
@@ -57,7 +124,7 @@ public class CompatibilityHelper {
 
 	public static boolean isArticleExistsWithIdSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isArticleExistsWithIdSupported(wallabagService.getServerVersion());
+		return isArticleExistsWithIdSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteArticleSupported(String serverVersion) {
@@ -66,7 +133,7 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteArticleSupported(wallabagService.getServerVersion());
+		return isDeleteArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteArticleWithIdSupported(String serverVersion) {
@@ -75,7 +142,7 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteArticleWithIdSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteArticleWithIdSupported(wallabagService.getServerVersion());
+		return isDeleteArticleWithIdSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isGetArticleSupported(String serverVersion) {
@@ -84,7 +151,7 @@ public class CompatibilityHelper {
 
 	public static boolean isGetArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isGetArticleSupported(wallabagService.getServerVersion());
+		return isGetArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isExportArticleSupported(String serverVersion) {
@@ -93,7 +160,7 @@ public class CompatibilityHelper {
 
 	public static boolean isExportArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isExportArticleSupported(wallabagService.getServerVersion());
+		return isExportArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isModifyArticleSupported(String serverVersion) {
@@ -102,7 +169,7 @@ public class CompatibilityHelper {
 
 	public static boolean isModifyArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isModifyArticleSupported(wallabagService.getServerVersion());
+		return isModifyArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isGetTagsSupported(String serverVersion) {
@@ -111,7 +178,7 @@ public class CompatibilityHelper {
 
 	public static boolean isGetTagsSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isGetTagsSupported(wallabagService.getServerVersion());
+		return isGetTagsSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isGetTagsForArticleSupported(String serverVersion) {
@@ -120,7 +187,7 @@ public class CompatibilityHelper {
 
 	public static boolean isGetTagsForArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isGetTagsForArticleSupported(wallabagService.getServerVersion());
+		return isGetTagsForArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isAddTagsToArticleSupported(String serverVersion) {
@@ -129,7 +196,7 @@ public class CompatibilityHelper {
 
 	public static boolean isAddTagsToArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isAddTagsToArticleSupported(wallabagService.getServerVersion());
+		return isAddTagsToArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteTagFromArticleSupported(String serverVersion) {
@@ -138,7 +205,7 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteTagFromArticleSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteTagFromArticleSupported(wallabagService.getServerVersion());
+		return isDeleteTagFromArticleSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteTagByLabelSupported(String serverVersion) {
@@ -147,7 +214,7 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteTagByLabelSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteTagByLabelSupported(wallabagService.getServerVersion());
+		return isDeleteTagByLabelSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteTagByIdSupported(String serverVersion) {
@@ -156,7 +223,7 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteTagByIdSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteTagByIdSupported(wallabagService.getServerVersion());
+		return isDeleteTagByIdSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteTagsByLabelSupported(String serverVersion) {
@@ -165,7 +232,7 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteTagsByLabelSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteTagsByLabelSupported(wallabagService.getServerVersion());
+		return isDeleteTagsByLabelSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isGetAnnotationsSupported(String serverVersion) {
@@ -174,7 +241,7 @@ public class CompatibilityHelper {
 
 	public static boolean isGetAnnotationsSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isGetAnnotationsSupported(wallabagService.getServerVersion());
+		return isGetAnnotationsSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isAddAnnotationSupported(String serverVersion) {
@@ -183,7 +250,7 @@ public class CompatibilityHelper {
 
 	public static boolean isAddAnnotationSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isAddAnnotationSupported(wallabagService.getServerVersion());
+		return isAddAnnotationSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isUpdateAnnotationSupported(String serverVersion) {
@@ -192,7 +259,7 @@ public class CompatibilityHelper {
 
 	public static boolean isUpdateAnnotationSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isUpdateAnnotationSupported(wallabagService.getServerVersion());
+		return isUpdateAnnotationSupported(wallabagService.getCachedVersion());
 	}
 
 	public static boolean isDeleteAnnotationSupported(String serverVersion) {
@@ -201,15 +268,22 @@ public class CompatibilityHelper {
 
 	public static boolean isDeleteAnnotationSupported(WallabagService wallabagService)
 			throws IOException, UnsuccessfulResponseException {
-		return isDeleteAnnotationSupported(wallabagService.getServerVersion());
+		return isDeleteAnnotationSupported(wallabagService.getCachedVersion());
 	}
 
-	private static boolean isBaseSupported(String serverVersion) {
+	public static boolean isBaseSupported(String serverVersion) {
 		return getVersionCode(serverVersion) >= VERSION_CODE_2_1_3;
+	}
+
+	public static boolean isBaseSupported(WallabagService wallabagService)
+			throws IOException, UnsuccessfulResponseException {
+		return isBaseSupported(wallabagService.getCachedVersion());
 	}
 
 	private static int getVersionCode(String serverVersion) {
 		nonNullValue(serverVersion, "serverVersion");
+
+		// TODO: real version parsing and comparison
 
 		switch(serverVersion) {
 			case "2.1.3":
@@ -238,7 +312,6 @@ public class CompatibilityHelper {
 				return VERSION_CODE_2_3_7;
 		}
 
-		// TODO: real version comparison
 		if("2.3.8".compareTo(serverVersion) < 0) {
 			return VERSION_CODE_NEWER;
 		}

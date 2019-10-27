@@ -16,7 +16,7 @@ public class Main {
 	private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) {
-		String baseUrl = "";
+		String baseUrl = "https://wallabag.example.com"; // point to your wallabag instance
 
 		String username = "";
 		String password = "";
@@ -25,9 +25,9 @@ public class Main {
 		String clientSecret = "";
 
 		String refreshToken = "";
-		String accessToken = "";
+		String accessToken = ""; // provide at least the access token
 
-		WallabagService service = new WallabagService(baseUrl, new BasicParameterHandler(
+		WallabagService service = WallabagService.instance(baseUrl, new BasicParameterHandler(
 				username, password, clientID, clientSecret, refreshToken, accessToken) {
 			@Override
 			public boolean tokensUpdated(TokenResponse token) {
@@ -41,7 +41,7 @@ public class Main {
 			String serverVersion = service.getVersion();
 			System.out.println("Server version: " + serverVersion);
 
-			String testUrl = "https://www.lemonde.fr/politique/article/2017/12/08/presidence-de-lr-trois-droitespour-un-fauteuil_5226595_823448.html";
+			String testUrl = "http://doc.wallabag.org/en/master/developer/api.html";
 
 			Article article = service.addArticleBuilder(testUrl)
 					.starred(true)
@@ -51,7 +51,7 @@ public class Main {
 
 			System.out.println("Reloaded article is not null: " + (service.reloadArticle(article.id) != null));
 
-			System.out.println("Exported as text:" + service.exportArticle(
+			System.out.println("Exported as text: " + service.exportArticle(
 					article.id, WallabagService.ResponseFormat.TXT).string());
 
 			article = service.modifyArticleBuilder(article.id)
@@ -105,10 +105,10 @@ public class Main {
 			if(idForRemoval >= 0) System.out.println("Deleted tag label: " + service.deleteTag(idForRemoval).label);
 
 			Annotation.Range range = new Annotation.Range();
-			range.startOffset = 0;
-			range.endOffset = 100;
-			range.start = "/p[1]";
-			range.end = "/p[1]";
+			range.startOffset = 1;
+			range.endOffset = 5;
+			range.start = "/ul[1]/li[1]";
+			range.end = "/ul[1]/li[1]";
 			List<Annotation.Range> ranges = new ArrayList<>(1);
 			ranges.add(range);
 			Annotation annotation = service.addAnnotation(article.id, ranges, "Test annotation from API", null);
@@ -119,6 +119,7 @@ public class Main {
 			for(Annotation an: annotations.rows) {
 				System.out.println("Annotation id: " + an.id);
 				System.out.println("Annotation text: " + an.text);
+				System.out.println("Annotation quote: " + an.quote);
 			}
 
 			System.out.println("Deleted annotation text: " + service.deleteAnnotation(annotation.id).text);

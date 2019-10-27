@@ -6,6 +6,9 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
+/**
+ * Ignore this.
+ */
 public interface WallabagAuthService {
 
 	@POST("oauth/v2/token")

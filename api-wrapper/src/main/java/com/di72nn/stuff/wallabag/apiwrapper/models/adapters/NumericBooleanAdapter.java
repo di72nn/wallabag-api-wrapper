@@ -3,6 +3,9 @@ package com.di72nn.stuff.wallabag.apiwrapper.models.adapters;
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.ToJson;
 
+/**
+ * Ignore this.
+ */
 public class NumericBooleanAdapter {
 
 	@ToJson

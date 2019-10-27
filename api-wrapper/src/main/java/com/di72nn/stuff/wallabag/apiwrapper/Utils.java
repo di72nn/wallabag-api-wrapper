@@ -5,6 +5,10 @@ import java.util.Iterator;
 
 class Utils {
 
+	static boolean isEmpty(String value) {
+		return value == null || value.isEmpty();
+	}
+
 	static String nonEmptyString(String value, String name) {
 		if(value == null) throw new NullPointerException(name + "is null");
 		if(value.isEmpty()) throw new IllegalArgumentException(name + " is empty");
