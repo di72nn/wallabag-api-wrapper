@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 1.0.0-RC1
+## Version 1.0.0-rc.1
 
 *2019.10.28*
 
@@ -24,7 +24,7 @@ Other notable changes:
 
 *2019.08.22*
 
-Add support for some new fields available in server versions 2.3.7 and 2.3.8.
+Add some new fields and features available in server versions 2.3.7 and 2.3.8.
 
 
 ## Version 0.0.1

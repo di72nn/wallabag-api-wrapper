@@ -19,7 +19,7 @@ Add the Jitpack repo to your root build.gradle at the end of repositories:
 Add the dependency:
 ```groovy
     dependencies {
-        implementation 'com.github.di72nn:wallabag-api-wrapper:1.0.0-RC1'
+        implementation 'com.github.di72nn.wallabag-api-wrapper:api-wrapper:v1.0.0-rc.1'
     }
 ```
 
