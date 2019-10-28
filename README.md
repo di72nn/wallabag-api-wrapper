@@ -71,7 +71,7 @@ for (ArticlesPageIterator pageIterator = service.getArticlesBuilder().pageIterat
 }
 ```
 
-[More code examples](api-wrapper-examples/src/main/java/com/di72nn/stuff/wallabag/Main.java).
+[More code examples](api-wrapper-examples/src/main/java/wallabag/Main.java).
 
 [wallabag Android app](https://github.com/wallabag/android-app) uses this library.
 You can check out its code for some real-world uses.
