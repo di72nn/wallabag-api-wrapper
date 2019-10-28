@@ -7,20 +7,20 @@ package com.di72nn.stuff.wallabag.apiwrapper.models;
  */
 public class Tag {
 
-	/** The ID of the tag. */
-	public int id;
-	/** The human readable label. */
-	public String label;
-	/** The internal representation of the label. */
-	public String slug;
+    /** The ID of the tag. */
+    public int id;
+    /** The human readable label. */
+    public String label;
+    /** The internal representation of the label. */
+    public String slug;
 
-	@Override
-	public String toString() {
-		return "Tag{" +
-				"id=" + id +
-				", label='" + label + '\'' +
-				", slug='" + slug + '\'' +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Tag{" +
+                "id=" + id +
+                ", label='" + label + '\'' +
+                ", slug='" + slug + '\'' +
+                '}';
+    }
 
 }

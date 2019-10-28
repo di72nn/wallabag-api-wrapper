@@ -11,18 +11,18 @@ import java.util.List;
  */
 public class Annotations {
 
-	/** The total number of annotations. */
-	public int total;
+    /** The total number of annotations. */
+    public int total;
 
-	/** The annotations. */
-	public List<Annotation> rows;
+    /** The annotations. */
+    public List<Annotation> rows;
 
-	@Override
-	public String toString() {
-		return "Annotations{" +
-				"total=" + total +
-				", rows" + (rows == null ? "=null" : ("[" + rows.size() + "]")) +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Annotations{" +
+                "total=" + total +
+                ", rows" + (rows == null ? "=null" : ("[" + rows.size() + "]")) +
+                '}';
+    }
 
 }

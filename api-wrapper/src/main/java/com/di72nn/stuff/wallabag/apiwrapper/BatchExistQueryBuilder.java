@@ -23,99 +23,101 @@ import static com.di72nn.stuff.wallabag.apiwrapper.Utils.nonNullValue;
  */
 public class BatchExistQueryBuilder {
 
-	private final WallabagService wallabagService;
+    private final WallabagService wallabagService;
 
-	private final int maxQueryLength;
+    private final int maxQueryLength;
 
-	@SuppressWarnings("ConstantConditions") // constant URL
-	private final HttpUrl.Builder builder = HttpUrl.parse("https://a").newBuilder();
+    @SuppressWarnings("ConstantConditions") // constant URL
+    private final HttpUrl.Builder builder = HttpUrl.parse("https://a").newBuilder();
 
-	private final List<String> urls = new ArrayList<>();
-	private int currentRequestLength;
+    private final List<String> urls = new ArrayList<>();
+    private int currentRequestLength;
 
-	BatchExistQueryBuilder(WallabagService wallabagService) {
-		this(wallabagService, 3990);
-	}
+    BatchExistQueryBuilder(WallabagService wallabagService) {
+        this(wallabagService, 3990);
+    }
 
-	BatchExistQueryBuilder(WallabagService wallabagService, int maxQueryLength) {
-		this.wallabagService = wallabagService;
-		this.maxQueryLength = maxQueryLength;
+    BatchExistQueryBuilder(WallabagService wallabagService, int maxQueryLength) {
+        this.wallabagService = wallabagService;
+        this.maxQueryLength = maxQueryLength;
 
-		reset();
-	}
+        reset();
+    }
 
-	/**
-	 * Resets the added URLs.
-	 */
-	public void reset() {
-		urls.clear();
-		currentRequestLength = wallabagService.getApiBaseURL().length() + "/api/entries/exists.json".length();
-	}
+    /**
+     * Resets the added URLs.
+     */
+    public void reset() {
+        urls.clear();
+        currentRequestLength = wallabagService.getApiBaseURL().length() + "/api/entries/exists.json".length();
+    }
 
-	/**
-	 * Adds the specified URL to the current batch, returns {@code true} if the URL was added
-	 * without exceeding the request size limit.
-	 *
-	 * @param url the URL to add
-	 * @return {@code true} if the URL was added without exceeding the request size limit,
-	 * {@code false} if the URL was not added
-	 */
-	public boolean addUrl(String url) {
-		nonNullValue(url, "url");
+    /**
+     * Adds the specified URL to the current batch, returns {@code true} if the URL was added
+     * without exceeding the request size limit.
+     *
+     * @param url the URL to add
+     * @return {@code true} if the URL was added without exceeding the request size limit,
+     * {@code false} if the URL was not added
+     */
+    public boolean addUrl(String url) {
+        nonNullValue(url, "url");
 
-		// TODO: should probably rewrite the calculation
-		@SuppressWarnings("ConstantConditions") // always non-empty query
-		int parameterLength = builder.setQueryParameter("urls[]", url).build().encodedQuery().length() + 1;
-		if(currentRequestLength + parameterLength <= maxQueryLength) {
-			urls.add(url);
-			currentRequestLength += parameterLength;
+        // TODO: should probably rewrite the calculation
+        @SuppressWarnings("ConstantConditions") // always non-empty query
+                int parameterLength = builder.setQueryParameter("urls[]", url).build().encodedQuery().length() + 1;
+        if (currentRequestLength + parameterLength <= maxQueryLength) {
+            urls.add(url);
+            currentRequestLength += parameterLength;
 
-			return true;
-		}
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * Returns a {@link Call} that is represented by this builder.
-	 * The {@link #execute()} method is a shortcut that executes this call.
-	 * @return a {@link Call} that is represented by this builder
-	 */
-	public Call<Map<String, Boolean>> buildCall() {
-		return wallabagService.articlesExistCall(urls);
-	}
+    /**
+     * Returns a {@link Call} that is represented by this builder.
+     * The {@link #execute()} method is a shortcut that executes this call.
+     *
+     * @return a {@link Call} that is represented by this builder
+     */
+    public Call<Map<String, Boolean>> buildCall() {
+        return wallabagService.articlesExistCall(urls);
+    }
 
-	/**
-	 * Returns a {@link Call} that is represented by this builder.
-	 * The {@link #executeWithId()} method is a shortcut that executes this call.
-	 * @return a {@link Call} that is represented by this builder
-	 */
-	public Call<Map<String, Integer>> buildCallWithId() {
-		return wallabagService.articlesExistWithIdCall(urls);
-	}
+    /**
+     * Returns a {@link Call} that is represented by this builder.
+     * The {@link #executeWithId()} method is a shortcut that executes this call.
+     *
+     * @return a {@link Call} that is represented by this builder
+     */
+    public Call<Map<String, Integer>> buildCallWithId() {
+        return wallabagService.articlesExistWithIdCall(urls);
+    }
 
-	/**
-	 * Performs the request and returns a {@code Map<String, Boolean>} with the results.
-	 * See {@link WallabagService#articlesExist(Collection)} for details.
-	 *
-	 * @return a {@code Map<String, Boolean>} with the results
-	 * @throws IOException in case of network errors
-	 * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-	 */
-	public Map<String, Boolean> execute() throws IOException, UnsuccessfulResponseException {
-		return wallabagService.articlesExist(urls);
-	}
+    /**
+     * Performs the request and returns a {@code Map<String, Boolean>} with the results.
+     * See {@link WallabagService#articlesExist(Collection)} for details.
+     *
+     * @return a {@code Map<String, Boolean>} with the results
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Map<String, Boolean> execute() throws IOException, UnsuccessfulResponseException {
+        return wallabagService.articlesExist(urls);
+    }
 
-	/**
-	 * Performs the request and returns a {@code Map<String, Integer>} with the results.
-	 * See {@link WallabagService#articlesExistWithId(Collection)} for details.
-	 *
-	 * @return a {@code Map<String, Integer>} with the results
-	 * @throws IOException in case of network errors
-	 * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-	 */
-	public Map<String, Integer> executeWithId() throws IOException, UnsuccessfulResponseException {
-		return wallabagService.articlesExistWithId(urls);
-	}
+    /**
+     * Performs the request and returns a {@code Map<String, Integer>} with the results.
+     * See {@link WallabagService#articlesExistWithId(Collection)} for details.
+     *
+     * @return a {@code Map<String, Integer>} with the results
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Map<String, Integer> executeWithId() throws IOException, UnsuccessfulResponseException {
+        return wallabagService.articlesExistWithId(urls);
+    }
 
 }

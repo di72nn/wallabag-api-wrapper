@@ -8,15 +8,15 @@ import com.squareup.moshi.ToJson;
  */
 public class NumericBooleanAdapter {
 
-	@ToJson
-	int toJson(@NumericBoolean boolean value) {
-		return value ? 1 : 0; // TODO: check
-	}
+    @ToJson
+    int toJson(@NumericBoolean boolean value) {
+        return value ? 1 : 0; // TODO: check
+    }
 
-	@FromJson
-	@NumericBoolean
-	boolean fromJson(String value) {
-		return "1".equals(value);
-	}
+    @FromJson
+    @NumericBoolean
+    boolean fromJson(String value) {
+        return "1".equals(value);
+    }
 
 }

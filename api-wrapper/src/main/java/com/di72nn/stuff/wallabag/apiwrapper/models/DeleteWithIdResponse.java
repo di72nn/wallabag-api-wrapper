@@ -8,14 +8,14 @@ import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
  */
 public class DeleteWithIdResponse {
 
-	/** The ID of the deleted article. */
-	public Integer id;
+    /** The ID of the deleted article. */
+    public Integer id;
 
-	@Override
-	public String toString() {
-		return "DeleteWithIdResponse{" +
-				"id=" + id +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "DeleteWithIdResponse{" +
+                "id=" + id +
+                '}';
+    }
 
 }

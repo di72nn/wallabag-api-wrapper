@@ -23,14 +23,15 @@ import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
  */
 public class NotFoundException extends UnsuccessfulResponseException {
 
-	/**
-	 * Constructs a {@code NotFoundException} with the given parameters.
-	 * @param responseCode    HTTP response code
-	 * @param responseMessage response message
-	 * @param responseBody    response body as {@code String}
-	 */
-	public NotFoundException(int responseCode, String responseMessage, String responseBody) {
-		super(responseCode, responseMessage, responseBody);
-	}
+    /**
+     * Constructs a {@code NotFoundException} with the given parameters.
+     *
+     * @param responseCode    HTTP response code
+     * @param responseMessage response message
+     * @param responseBody    response body as {@code String}
+     */
+    public NotFoundException(int responseCode, String responseMessage, String responseBody) {
+        super(responseCode, responseMessage, responseBody);
+    }
 
 }

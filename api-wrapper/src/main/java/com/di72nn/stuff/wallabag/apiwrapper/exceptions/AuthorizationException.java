@@ -8,14 +8,15 @@ import com.di72nn.stuff.wallabag.apiwrapper.ParameterHandler;
  */
 public class AuthorizationException extends UnsuccessfulResponseException {
 
-	/**
-	 * Constructs an {@code AuthorizationException} with the given parameters.
-	 * @param responseCode    HTTP response code
-	 * @param responseMessage response message
-	 * @param responseBody    response body as {@code String}
-	 */
-	public AuthorizationException(int responseCode, String responseMessage, String responseBody) {
-		super(responseCode, responseMessage, responseBody);
-	}
+    /**
+     * Constructs an {@code AuthorizationException} with the given parameters.
+     *
+     * @param responseCode    HTTP response code
+     * @param responseMessage response message
+     * @param responseBody    response body as {@code String}
+     */
+    public AuthorizationException(int responseCode, String responseMessage, String responseBody) {
+        super(responseCode, responseMessage, responseBody);
+    }
 
 }

@@ -9,15 +9,15 @@ import com.squareup.moshi.Json;
  */
 public class ExistsWithIdResponse {
 
-	/** The ID of the article if it exists, {@code null} otherwise. */
-	@Json(name = "exists")
-	public Integer id;
+    /** The ID of the article if it exists, {@code null} otherwise. */
+    @Json(name = "exists")
+    public Integer id;
 
-	@Override
-	public String toString() {
-		return "ExistsWithIdResponse{" +
-				"id=" + id +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "ExistsWithIdResponse{" +
+                "id=" + id +
+                '}';
+    }
 
 }

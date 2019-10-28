@@ -5,37 +5,37 @@ package com.di72nn.stuff.wallabag.apiwrapper.models;
  */
 public class Links {
 
-	/**
-	 * The {@code Link} class is a plain container for a single URL.
-	 */
-	public static class Link {
+    /**
+     * The {@code Link} class is a plain container for a single URL.
+     */
+    public static class Link {
 
-		/** The URL. */
-		public String href;
+        /** The URL. */
+        public String href;
 
-		@Override
-		public String toString() {
-			return href;
-		}
-	}
+        @Override
+        public String toString() {
+            return href;
+        }
+    }
 
-	/** The link to the current page. */
-	public Link self;
-	/** The link to the first page. */
-	public Link first;
-	/** The link to the last page. */
-	public Link last;
-	/** The link to the next page. */
-	public Link next;
+    /** The link to the current page. */
+    public Link self;
+    /** The link to the first page. */
+    public Link first;
+    /** The link to the last page. */
+    public Link last;
+    /** The link to the next page. */
+    public Link next;
 
-	@Override
-	public String toString() {
-		return "Links{" +
-				"self=" + self +
-				", first=" + first +
-				", last=" + last +
-				", next=" + next +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Links{" +
+                "self=" + self +
+                ", first=" + first +
+                ", last=" + last +
+                ", next=" + next +
+                '}';
+    }
 
 }

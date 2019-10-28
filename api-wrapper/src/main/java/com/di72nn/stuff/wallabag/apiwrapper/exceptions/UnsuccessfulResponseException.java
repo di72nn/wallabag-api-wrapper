@@ -10,45 +10,49 @@ import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
  */
 public class UnsuccessfulResponseException extends Exception {
 
-	private int responseCode;
-	private String responseMessage;
-	private String responseBody;
+    private int responseCode;
+    private String responseMessage;
+    private String responseBody;
 
-	/**
-	 * Constructs an {@code UnsuccessfulResponseException} with the given parameters.
-	 * @param responseCode    HTTP response code
-	 * @param responseMessage response message
-	 * @param responseBody    response body as {@code String}
-	 */
-	public UnsuccessfulResponseException(int responseCode, String responseMessage, String responseBody) {
-		super("HTTP response: " + responseCode + " " + responseMessage);
-		this.responseCode = responseCode;
-		this.responseMessage = responseMessage;
-		this.responseBody = responseBody;
-	}
+    /**
+     * Constructs an {@code UnsuccessfulResponseException} with the given parameters.
+     *
+     * @param responseCode    HTTP response code
+     * @param responseMessage response message
+     * @param responseBody    response body as {@code String}
+     */
+    public UnsuccessfulResponseException(int responseCode, String responseMessage, String responseBody) {
+        super("HTTP response: " + responseCode + " " + responseMessage);
+        this.responseCode = responseCode;
+        this.responseMessage = responseMessage;
+        this.responseBody = responseBody;
+    }
 
-	/**
-	 * Returns an HTTP response code
-	 * @return an HTTP response code
-	 */
-	public int getResponseCode() {
-		return responseCode;
-	}
+    /**
+     * Returns an HTTP response code
+     *
+     * @return an HTTP response code
+     */
+    public int getResponseCode() {
+        return responseCode;
+    }
 
-	/**
-	 * Returns a response message
-	 * @return a response message
-	 */
-	public String getResponseMessage() {
-		return responseMessage;
-	}
+    /**
+     * Returns a response message
+     *
+     * @return a response message
+     */
+    public String getResponseMessage() {
+        return responseMessage;
+    }
 
-	/**
-	 * Returns a response body string
-	 * @return a response body string
-	 */
-	public String getResponseBody() {
-		return responseBody;
-	}
+    /**
+     * Returns a response body string
+     *
+     * @return a response body string
+     */
+    public String getResponseBody() {
+        return responseBody;
+    }
 
 }

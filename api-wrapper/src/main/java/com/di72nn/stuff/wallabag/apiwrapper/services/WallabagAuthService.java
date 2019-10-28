@@ -11,7 +11,7 @@ import retrofit2.http.POST;
  */
 public interface WallabagAuthService {
 
-	@POST("oauth/v2/token")
-	Call<TokenResponse> token(@Body RequestBody body);
+    @POST("oauth/v2/token")
+    Call<TokenResponse> token(@Body RequestBody body);
 
 }

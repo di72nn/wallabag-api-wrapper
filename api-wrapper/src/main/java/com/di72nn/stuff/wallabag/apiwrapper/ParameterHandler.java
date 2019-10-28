@@ -53,50 +53,57 @@ import com.di72nn.stuff.wallabag.apiwrapper.models.TokenResponse;
  */
 public interface ParameterHandler {
 
-	/**
-	 * Returns the username of the wallabag user.
-	 * @return the username of the wallabag user, {@code null}able
-	 */
-	String getUsername();
+    /**
+     * Returns the username of the wallabag user.
+     *
+     * @return the username of the wallabag user, {@code null}able
+     */
+    String getUsername();
 
-	/**
-	 * Returns the password of the wallabag user.
-	 * @return the password of the wallabag user, {@code null}able
-	 */
-	String getPassword();
+    /**
+     * Returns the password of the wallabag user.
+     *
+     * @return the password of the wallabag user, {@code null}able
+     */
+    String getPassword();
 
-	/**
-	 * Returns the API client ID.
-	 * @return the API client ID, {@code null}able
-	 */
-	String getClientID();
+    /**
+     * Returns the API client ID.
+     *
+     * @return the API client ID, {@code null}able
+     */
+    String getClientID();
 
-	/**
-	 * Returns the API client secret.
-	 * @return the API client secret, {@code null}able
-	 */
-	String getClientSecret();
+    /**
+     * Returns the API client secret.
+     *
+     * @return the API client secret, {@code null}able
+     */
+    String getClientSecret();
 
-	/**
-	 * Returns the API refresh token.
-	 * @return the API refresh token, {@code null}able
-	 */
-	String getRefreshToken();
+    /**
+     * Returns the API refresh token.
+     *
+     * @return the API refresh token, {@code null}able
+     */
+    String getRefreshToken();
 
-	/**
-	 * Returns the API access token.
-	 * @return the API access token, {@code null}able
-	 */
-	String getAccessToken();
+    /**
+     * Returns the API access token.
+     *
+     * @return the API access token, {@code null}able
+     */
+    String getAccessToken();
 
-	/**
-	 * Accepts {@link TokenResponse} and returns {@code true} if the token is considered acceptable,
-	 * i.e. the requests to the API can be continued using the new {@code access token}.
-	 * <p>It is recommended to {@code return token.accessToken != null && !token.accessToken.isEmpty();},
-	 * it is however safe to always {@code return true}.
-	 * @param token the updated {@link TokenResponse}
-	 * @return {@code true} if the token is considered acceptable.
-	 */
-	boolean tokensUpdated(TokenResponse token);
+    /**
+     * Accepts {@link TokenResponse} and returns {@code true} if the token is considered acceptable,
+     * i.e. the requests to the API can be continued using the new {@code access token}.
+     * <p>It is recommended to {@code return token.accessToken != null && !token.accessToken.isEmpty();},
+     * it is however safe to always {@code return true}.
+     *
+     * @param token the updated {@link TokenResponse}
+     * @return {@code true} if the token is considered acceptable.
+     */
+    boolean tokensUpdated(TokenResponse token);
 
 }

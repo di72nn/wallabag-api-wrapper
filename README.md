@@ -33,7 +33,7 @@ use the `Client ID` and `Client secret` of the created client in the following c
 ```java
 // Get a service instance
 WallabagService service = WallabagService.instance("https://wallabag.example.com",
-		new BasicParameterHandler("username", "password", "client ID", "client secret"));
+        new BasicParameterHandler("username", "password", "client ID", "client secret"));
 
 // Save an article
 Article article = service.addArticle("https://doc.wallabag.org/en/developer/api/readme.html");
@@ -43,31 +43,31 @@ System.out.println(article.title + ": " + article.content);
 
 // Mark article as read and add some tags
 service.modifyArticleBuilder(article.id)
-		.archive(true) // mark as read
-		.tag("Programming").tag("OAuth").tag("wallabag") // add tags
-		.execute();
+        .archive(true) // mark as read
+        .tag("Programming").tag("OAuth").tag("wallabag") // add tags
+        .execute();
 
 // Export article as text (or other format)
 System.out.println("Exported as text: " + service.exportArticle(
-		article.id, WallabagService.ResponseFormat.TXT).string());
+        article.id, WallabagService.ResponseFormat.TXT).string());
 
 // Load the first 10 favorite articles
 List<Article> articles = service.getArticlesBuilder()
-		.starred(true) // only favorite
-		.sortOrder(ArticlesQueryBuilder.SortOrder.ASCENDING) // starting from the oldest
-		.perPage(10) // only the first 10
-		.execute()
-		.embedded.items;
+        .starred(true) // only favorite
+        .sortOrder(ArticlesQueryBuilder.SortOrder.ASCENDING) // starting from the oldest
+        .perPage(10) // only the first 10
+        .execute()
+        .embedded.items;
 
 // or iterate over all articles
 for (ArticlesPageIterator pageIterator = service.getArticlesBuilder().pageIterator(); pageIterator.hasNext(); ) {
-	Articles articlesPage = pageIterator.next();
+    Articles articlesPage = pageIterator.next();
 
-	System.out.println("Page " + articlesPage.page + " out of " + articlesPage.pages);
-	for (Article a: articlesPage.embedded.items) {
-		System.out.println("Title: " + a.title);
-		System.out.println("URL: " + a.url);
-	}
+    System.out.println("Page " + articlesPage.page + " out of " + articlesPage.pages);
+    for (Article a: articlesPage.embedded.items) {
+        System.out.println("Title: " + a.title);
+        System.out.println("URL: " + a.url);
+    }
 }
 ```
 

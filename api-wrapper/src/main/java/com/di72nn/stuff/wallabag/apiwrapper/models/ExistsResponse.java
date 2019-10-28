@@ -8,14 +8,14 @@ import com.di72nn.stuff.wallabag.apiwrapper.WallabagService;
  */
 public class ExistsResponse {
 
-	/** The flag that indicates whether the article exists. */
-	public boolean exists;
+    /** The flag that indicates whether the article exists. */
+    public boolean exists;
 
-	@Override
-	public String toString() {
-		return "ExistsResponse{" +
-				"exists=" + exists +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "ExistsResponse{" +
+                "exists=" + exists +
+                '}';
+    }
 
 }
