@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
@@ -14,7 +15,31 @@ import java.util.NoSuchElementException;
  * returned as a result for {@link ArticlesQueryBuilder} queries.
  * <p>This class is not thread safe and cannot be shared between threads.
  */
-public class ArticlesPageIterator {
+public class ArticlesPageIterator implements Iterable<Articles> {
+
+    /**
+     * This exception class serves as a wrapper for checked exceptions.
+     * See {@link #iterator()}.
+     */
+    public static class UncheckedIteratorException extends RuntimeException {
+        UncheckedIteratorException(Exception cause) {
+            super(cause);
+        }
+
+        /**
+         * Rethrows the wrapped exception.
+         * See {@link #hasNext()} for the details on the exceptions.
+         *
+         * @throws IOException                   the wrapped IOException
+         * @throws UnsuccessfulResponseException the wrapped UnsuccessfulResponseException
+         */
+        public void rethrow() throws IOException, UnsuccessfulResponseException {
+            Throwable cause = getCause();
+            if (cause instanceof IOException) throw ((IOException) cause);
+            if (cause instanceof UnsuccessfulResponseException) throw ((UnsuccessfulResponseException) cause);
+            throw new RuntimeException("Should not happen", cause);
+        }
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(ArticlesPageIterator.class);
 
@@ -103,6 +128,39 @@ public class ArticlesPageIterator {
 
         ready = false;
         return articles;
+    }
+
+    /**
+     * Returns an {@link Iterator} implementation that wraps checked exceptions into {@link UncheckedIteratorException}.
+     *
+     * @return an {@link Iterator} implementation that wraps checked exceptions into {@link UncheckedIteratorException}
+     */
+    @Override
+    public Iterator<Articles> iterator() {
+        return new Iterator<Articles>() {
+            @Override
+            public boolean hasNext() {
+                try {
+                    return ArticlesPageIterator.this.hasNext();
+                } catch (IOException | UnsuccessfulResponseException e) {
+                    throw new ArticlesPageIterator.UncheckedIteratorException(e);
+                }
+            }
+
+            @Override
+            public Articles next() {
+                try {
+                    return ArticlesPageIterator.this.next();
+                } catch (IOException | UnsuccessfulResponseException e) {
+                    throw new ArticlesPageIterator.UncheckedIteratorException(e);
+                }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
+        };
     }
 
 }
