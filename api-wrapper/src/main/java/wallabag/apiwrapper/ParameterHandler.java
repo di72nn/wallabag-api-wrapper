@@ -40,6 +40,9 @@ import wallabag.apiwrapper.models.TokenResponse;
  *         If one of the steps succeeded, the initial API request is retried using the new {@code access token}.
  *     </li>
  * </ul>
+ * <p>If the provided {@code access token} is empty or {@code null}, no auth headers are added to initial request.
+ * If the method requires auth, the token update procedure is performed;
+ * if it succeeds, the request is retried with a newly acquired token.
  * <p>{@code WallabagService} does not create additional threads,
  * so if only one thread is using a {@code WallabagService} instance,
  * {@code ParameterHandler} usage is inherently thread-safe.

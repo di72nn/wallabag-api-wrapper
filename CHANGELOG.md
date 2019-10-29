@@ -12,6 +12,9 @@
 
  * `ArticlesQueryBuilder#since(long)` now accepts milliseconds instead of seconds.
  * `ArticlesPageIterator` now starts from the page set in the `ArticlesQueryBuilder`.
+ * `ParameterHandler` logic change: if `access token` is not provided, no auth headers are added to initial request.  
+ As a result, the `getVersion()` method works without any credentials (so it is not suitable for auth testing).  
+ If a method does require auth, the token update procedure is performed and the request is retried with a new token.
  * Obvious relocations and renaming.
 
 Other notable changes:
