@@ -22,6 +22,26 @@ public class Annotation {
         public long startOffset;
         public long endOffset;
 
+        /**
+         * Constructs a new {@code Range} instance initializing fields with default values.
+         */
+        public Range() {}
+
+        /**
+         * Constructs a new {@code Range} instance initializing fields with the specified values.
+         *
+         * @param start       start
+         * @param end         end
+         * @param startOffset start offset
+         * @param endOffset   end offset
+         */
+        public Range(String start, String end, long startOffset, long endOffset) {
+            this.start = start;
+            this.end = end;
+            this.startOffset = startOffset;
+            this.endOffset = endOffset;
+        }
+
         @Override
         public String toString() {
             return "Range{" +
