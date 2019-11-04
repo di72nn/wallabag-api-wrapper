@@ -2,6 +2,11 @@
 
 A simple Java library for accessing the [wallabag API](https://doc.wallabag.org/en/developer/api/readme.html).
 
+Supported wallabag versions are `2.1.3`-`2.3.8`.
+Earlier versions should still work with some features lacking.
+Newer versions should work, but were not tested against.
+Minimal required Java version is 7.
+
 
 ## How to get
 
