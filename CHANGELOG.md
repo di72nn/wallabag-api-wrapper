@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 1.0.0-rc.2
+
+*2019.11.14*
+
+ * Add a convenience-constructor to `Annotation.Range`.
+ * Some documentation clarifications.
+
+
 ## Version 1.0.0-rc.1
 
 *2019.10.28*
