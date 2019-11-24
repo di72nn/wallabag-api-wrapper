@@ -48,14 +48,8 @@ abstract class AbstractTagsBuilder<T extends AbstractTagsBuilder<T>> {
     public T tags(Collection<String> tags) {
         nonNullValue(tags, "tags");
 
-        if (!tags.isEmpty()) {
-            if (this.tags == null) {
-                this.tags = new HashSet<>(tags.size());
-            }
-
-            for (String tag : tags) {
-                tag(tag);
-            }
+        for (String tag : tags) {
+            tag(tag);
         }
 
         return self();

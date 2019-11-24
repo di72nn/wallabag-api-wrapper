@@ -1,7 +1,7 @@
 package wallabag.apiwrapper;
 
-import wallabag.apiwrapper.models.Article;
 import okhttp3.FormBody;
+import wallabag.apiwrapper.models.Article;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -140,14 +140,8 @@ abstract class AbstractArticleBuilder<T extends AbstractArticleBuilder<T>> exten
     public T authors(Collection<String> authors) {
         nonNullValue(authors, "authors");
 
-        if (!authors.isEmpty()) {
-            if (this.authors == null) {
-                this.authors = new ArrayList<>(authors.size());
-            }
-
-            for (String author : authors) {
-                author(author);
-            }
+        for (String author : authors) {
+            author(author);
         }
 
         return self();
