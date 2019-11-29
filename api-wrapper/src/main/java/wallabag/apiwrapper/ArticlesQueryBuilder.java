@@ -239,6 +239,30 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
     }
 
     /**
+     * Returns an {@link ArticleIterator} for iterating over all {@link Article}s
+     * returned for the parameters provided by this builder.
+     * <p>The returned iterator handles {@link NotFoundException} as empty internally.
+     * <p>The iteration starts from the page set with {@link #page(int)}.
+     *
+     * @return an {@link ArticleIterator} object
+     */
+    public ArticleIterator articleIterator() {
+        return articleIterator(true);
+    }
+
+    /**
+     * Returns an {@link ArticleIterator} for iterating over all {@link Article}s
+     * returned for the parameters provided by this builder.
+     * <p>The iteration starts from the page set with {@link #page(int)}.
+     *
+     * @param notFoundAsEmpty whether to handle {@link NotFoundException} as empty internally
+     * @return an {@link ArticleIterator} object
+     */
+    public ArticleIterator articleIterator(boolean notFoundAsEmpty) {
+        return new ArticleIterator(copy(), notFoundAsEmpty);
+    }
+
+    /**
      * Returns an {@link ArticlesPageIterator} for iterating over {@link Articles}
      * returned for the parameters provided by this builder.
      * <p>The returned iterator handles {@link NotFoundException} as empty internally.
