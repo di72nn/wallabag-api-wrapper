@@ -24,7 +24,6 @@ public class ArticlesPageIterator {
     private int currentPage;
 
     private Articles articles;
-    private boolean ready;
     private boolean lastPageReached;
 
     ArticlesPageIterator(ArticlesQueryBuilder articlesQueryBuilder, boolean notFoundAsEmpty) {
@@ -57,10 +56,9 @@ public class ArticlesPageIterator {
      *                                       <em>and</em> {@code notFoundAsEmpty} was not set to {@code true}
      */
     public boolean hasNext() throws IOException, UnsuccessfulResponseException {
-        if (ready) return true;
+        if (articles != null) return true;
         if (lastPageReached) return false;
 
-        Articles articles;
         try {
             articles = queryBuilder.page(currentPage++).execute();
         } catch (NotFoundException nfe) {
@@ -69,22 +67,18 @@ public class ArticlesPageIterator {
             }
 
             LOG.debug("Handling NFE as empty", nfe);
-            articles = null;
+            lastPageReached = true;
         }
-
-        this.articles = articles;
 
         if (articles != null) {
             LOG.trace("Page: {}/{}, total articles: {}", articles.page, articles.pages, articles.total);
 
-            ready = true;
             if (articles.page == articles.pages) lastPageReached = true;
         } else {
             LOG.trace("articles == null");
         }
 
-        ready = articles != null;
-        return ready;
+        return articles != null;
     }
 
     /**
@@ -101,7 +95,8 @@ public class ArticlesPageIterator {
     public Articles next() throws IOException, UnsuccessfulResponseException {
         if (!hasNext()) throw new NoSuchElementException();
 
-        ready = false;
+        Articles articles = this.articles;
+        this.articles = null;
         return articles;
     }
 
