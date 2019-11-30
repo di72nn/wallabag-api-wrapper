@@ -65,14 +65,11 @@ List<Article> articles = service.getArticlesBuilder()
         .embedded.items;
 
 // or iterate over all articles
-for (ArticlesPageIterator pageIterator = service.getArticlesBuilder().pageIterator(); pageIterator.hasNext(); ) {
-    Articles articlesPage = pageIterator.next();
+for (ArticleIterator it = service.getArticlesBuilder().articleIterator(); it.hasNext(); ) {
+    Article article = it.next();
 
-    System.out.println("Page " + articlesPage.page + " out of " + articlesPage.pages);
-    for (Article a: articlesPage.embedded.items) {
-        System.out.println("Title: " + a.title);
-        System.out.println("URL: " + a.url);
-    }
+    System.out.println("Title: " + article.title);
+    System.out.println("URL: " + article.url);
 }
 ```
 
