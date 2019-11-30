@@ -1,5 +1,15 @@
 # Change Log
 
+## Version 1.0.0-rc.3
+
+*2019.11.30*
+
+ * Added `ArticleIterator`.
+ * Internal changes:
+   * Simplified `ArticlesPageIterator`.
+   * Removed unneeded optimization attempts in abstract builders.
+
+
 ## Version 1.0.0-rc.2
 
 *2019.11.14*
