@@ -1,8 +1,6 @@
 package wallabag;
 
-import wallabag.apiwrapper.BasicParameterHandler;
-import wallabag.apiwrapper.CompatibilityHelper;
-import wallabag.apiwrapper.WallabagService;
+import wallabag.apiwrapper.*;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import wallabag.apiwrapper.models.*;
 import org.slf4j.Logger;
@@ -73,6 +71,13 @@ public class Main {
                 for (Map.Entry<String, Integer> entry : service.articlesExistByUrlsWithId(urls).entrySet()) {
                     System.out.println("URL: " + entry.getKey() + ", id: " + entry.getValue());
                 }
+            }
+
+            BatchExistQueryBuilder existQueryBuilder = service.getArticlesExistQueryBuilder();
+            existQueryBuilder.addUrl(testUrl);
+            existQueryBuilder.addUrl("http://google.com");
+            for (Map.Entry<String, Boolean> entry : existQueryBuilder.execute().entrySet()) {
+                System.out.println("URL: " + entry.getKey() + ", exists: " + entry.getValue());
             }
 
             System.out.println("Article title: " + service.getArticle(article.id).title);

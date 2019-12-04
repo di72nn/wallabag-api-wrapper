@@ -429,6 +429,8 @@ public class WallabagService {
      * The {@code String} key of the map is the article URL
      * and the {@code Boolean} value is the corresponding result (non-{@code null} value).
      * <p>See {@link #articleExistsByUrl(String)} for details.
+     * <p>N.B. This method is present for completeness, the recommended way is to use
+     * {@link #getArticlesExistQueryBuilder()}.
      * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
      * Don't use this method for more than a couple of URLs or extra lengthy URLs.
      * If unsure, use {@link #getArticlesExistQueryBuilder()}.
@@ -458,6 +460,8 @@ public class WallabagService {
      * The {@code String} key of the map is the article URL hash
      * and the {@code Boolean} value is the corresponding result (non-{@code null} value).
      * <p>See {@link #articleExistsByHash(String)} for details.
+     * <p>N.B. This method is present for completeness, the recommended way is to use
+     * {@link #getArticlesExistQueryBuilder()}.
      * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
      * Don't use this method for more than a couple of URLs.
      * If unsure, use {@link #getArticlesExistQueryBuilder()}.
@@ -487,6 +491,8 @@ public class WallabagService {
      * The {@code String} key of the map is the article URL
      * and the {@code Integer} value is the corresponding article ID if it exists, {@code null} otherwise.
      * <p>See {@link #articleExistsByUrlWithId(String)} for details.
+     * <p>N.B. This method is present for completeness, the recommended way is to use
+     * {@link #getArticlesExistQueryBuilder()}.
      * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
      * Don't use this method for more than a couple of URLs or extra lengthy URLs.
      * If unsure, use {@link #getArticlesExistQueryBuilder()}.
@@ -516,6 +522,8 @@ public class WallabagService {
      * The {@code String} key of the map is the article URL hash
      * and the {@code Integer} value is the corresponding article ID if it exists, {@code null} otherwise.
      * <p>See {@link #articleExistsByHashWithId(String)} for details.
+     * <p>N.B. This method is present for completeness, the recommended way is to use
+     * {@link #getArticlesExistQueryBuilder()}.
      * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
      * Don't use this method for more than a couple of URLs.
      * If unsure, use {@link #getArticlesExistQueryBuilder()}.

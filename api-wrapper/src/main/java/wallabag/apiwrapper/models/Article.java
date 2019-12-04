@@ -19,6 +19,10 @@ public class Article {
     /** The URL of the article (the URL from which the article was fetched). */
     public String url;
 
+    /** The SHA-1 hash of {@link #url}. {@code null}able. */
+    @Json(name = "hashed_url")
+    public String hashedUrl;
+
     /** The title of the article. */
     public String title;
 
