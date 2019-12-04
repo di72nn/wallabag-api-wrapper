@@ -45,6 +45,10 @@ public class Article {
     @Json(name = "is_archived")
     public boolean archived;
 
+    /** The date when the {@link #archived} flag was changed. {@code null}able. */
+    @Json(name = "archived_at")
+    public Date archivedAt;
+
     /** The flag that indicates whether the article was marked as "starred" (marked as "favorite"). */
     @NumericBoolean
     @Json(name = "is_starred")

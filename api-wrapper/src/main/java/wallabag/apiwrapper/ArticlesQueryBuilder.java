@@ -29,7 +29,9 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
         /** Sorting by the creation date ({@link Article#createdAt}). */
         CREATED("created"),
         /** Sorting by the modification date ({@link Article#updatedAt}). */
-        UPDATED("updated");
+        UPDATED("updated"),
+        /** Sorting by the archival date ({@link Article#archivedAt}). */
+        ARCHIVED("archived");
 
         private String value;
 
