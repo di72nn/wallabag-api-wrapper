@@ -1,5 +1,6 @@
 package wallabag.apiwrapper;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import wallabag.apiwrapper.exceptions.AuthorizationException;
 import wallabag.apiwrapper.exceptions.NotFoundException;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
@@ -234,13 +235,21 @@ public class WallabagService {
      * @return a {@link Call}
      */
     public Call<ExistsResponse> articleExistsCall(String url) {
-        return wallabagApiService.exists(nonEmptyString(url, "URL"));
+        nonEmptyString(url, "URL");
+
+        if (CompatibilityHelper.isArticleExistsByHashSupportedSafe(this)) {
+            return wallabagApiService.exists(null, DigestUtils.sha1Hex(url));
+        } else {
+            return wallabagApiService.exists(url, null);
+        }
     }
 
     /**
-     * Returns {@code true} if the specified URL is present on the server.
+     * Returns {@code true} if an article with the specified URL is present on the server.
      * This call may produce false-negative results in some cases (redirects).
      * See server documentation for details.
+     * <p>This method does auto-detection of the proper endpoint method
+     * based on the result of {@link #getCachedVersion()}.
      *
      * @param url the URL to check
      * @return {@code true} if the article exists
@@ -248,7 +257,68 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public boolean articleExists(String url) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articleExistsCall(url).execute()).exists;
+        nonEmptyString(url, "URL");
+
+        Call<ExistsResponse> call;
+        if (CompatibilityHelper.isArticleExistsByHashSupported(this)) {
+            call = wallabagApiService.exists(null, DigestUtils.sha1Hex(url));
+        } else {
+            call = wallabagApiService.exists(url, null);
+        }
+
+        return checkResponseBody(call.execute()).exists;
+    }
+
+    /**
+     * See {@link #articleExistsByUrl(String)}.
+     *
+     * @param url URL
+     * @return a {@link Call}
+     */
+    public Call<ExistsResponse> articleExistsByUrlCall(String url) {
+        return wallabagApiService.exists(nonEmptyString(url, "URL"), null);
+    }
+
+    /**
+     * Returns {@code true} if an article with the specified URL is present on the server.
+     * This call may produce false-negative results in some cases (redirects).
+     * See server documentation for details.
+     * <p>N.B. This method is present for completeness, the recommended methods are
+     * {@link #articleExists(String)} and {@link #articleExistsWithId(String)}.
+     *
+     * @param url the URL to check
+     * @return {@code true} if the article exists
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public boolean articleExistsByUrl(String url) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(articleExistsByUrlCall(url).execute()).exists;
+    }
+
+    /**
+     * See {@link #articleExistsByUrl(String)}.
+     *
+     * @param urlHash a SHA-1 hash of the URL to check
+     * @return a {@link Call}
+     */
+    public Call<ExistsResponse> articleExistsByHashCall(String urlHash) {
+        return wallabagApiService.exists(null, nonEmptyString(urlHash, "urlHash"));
+    }
+
+    /**
+     * Returns {@code true} if an article with the specified URL hash is present on the server.
+     * This call may produce false-negative results in some cases (redirects).
+     * See server documentation for details.
+     * <p>N.B. This method is present for completeness, the recommended methods are
+     * {@link #articleExists(String)} and {@link #articleExistsWithId(String)}.
+     *
+     * @param urlHash a SHA-1 hash of the URL to check
+     * @return {@code true} if the article exists
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public boolean articleExistsByHash(String urlHash) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(articleExistsByHashCall(urlHash).execute()).exists;
     }
 
     /**
@@ -258,13 +328,21 @@ public class WallabagService {
      * @return a {@link Call}
      */
     public Call<ExistsWithIdResponse> articleExistsWithIdCall(String url) {
-        return wallabagApiService.exists(nonEmptyString(url, "URL"), "1");
+        nonEmptyString(url, "URL");
+
+        if (CompatibilityHelper.isArticleExistsByHashSupportedSafe(this)) {
+            return wallabagApiService.existsWithId(null, DigestUtils.sha1Hex(url), "1");
+        } else {
+            return wallabagApiService.existsWithId(url, null, "1");
+        }
     }
 
     /**
      * Returns an ID of the article with the specified URL if it is present on the server or {@code null} otherwise.
      * This call may produce false-negative results in some cases (redirects).
      * See server documentation for details.
+     * <p>This method does auto-detection of the proper endpoint method
+     * based on the result of {@link #getCachedVersion()}.
      *
      * @param url the URL to check
      * @return an ID if the article exists, {@code null} otherwise
@@ -272,24 +350,85 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Integer articleExistsWithId(String url) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articleExistsWithIdCall(url).execute()).id;
+        nonEmptyString(url, "URL");
+
+        Call<ExistsWithIdResponse> call;
+        if (CompatibilityHelper.isArticleExistsByHashSupported(this)) {
+            call = wallabagApiService.existsWithId(null, DigestUtils.sha1Hex(url), "1");
+        } else {
+            call = wallabagApiService.existsWithId(url, null, "1");
+        }
+
+        return checkResponseBody(call.execute()).id;
     }
 
     /**
-     * See {@link #articlesExist(Collection)}.
+     * See {@link #articleExistsByUrlWithId(String)}.
+     *
+     * @param url URL
+     * @return a {@link Call}
+     */
+    public Call<ExistsWithIdResponse> articleExistsByUrlWithIdCall(String url) {
+        return wallabagApiService.existsWithId(nonEmptyString(url, "URL"), null, "1");
+    }
+
+    /**
+     * Returns an ID of the article with the specified URL if it is present on the server or {@code null} otherwise.
+     * This call may produce false-negative results in some cases (redirects).
+     * See server documentation for details.
+     * <p>N.B. This method is present for completeness, the recommended methods are
+     * {@link #articleExists(String)} and {@link #articleExistsWithId(String)}.
+     *
+     * @param url the URL to check
+     * @return an ID if the article exists, {@code null} otherwise
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Integer articleExistsByUrlWithId(String url) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(articleExistsByUrlWithIdCall(url).execute()).id;
+    }
+
+    /**
+     * See {@link #articleExistsByHashWithId(String)}.
+     *
+     * @param urlHash a SHA-1 hash of the URL to check
+     * @return a {@link Call}
+     */
+    public Call<ExistsWithIdResponse> articleExistsByHashWithIdCall(String urlHash) {
+        return wallabagApiService.existsWithId(null, nonEmptyString(urlHash, "urlHash"), "1");
+    }
+
+    /**
+     * Returns an ID of the article with the specified URL hash if it is present on the server or {@code null} otherwise.
+     * This call may produce false-negative results in some cases (redirects).
+     * See server documentation for details.
+     * <p>N.B. This method is present for completeness, the recommended methods are
+     * {@link #articleExists(String)} and {@link #articleExistsWithId(String)}.
+     *
+     * @param urlHash a SHA-1 hash of the URL to check
+     * @return an ID if the article exists, {@code null} otherwise
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Integer articleExistsByHashWithId(String urlHash) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(articleExistsByHashWithIdCall(urlHash).execute()).id;
+    }
+
+    /**
+     * See {@link #articlesExistByUrls(Collection)}.
      *
      * @param urls URLs
      * @return a {@link Call}
      */
-    public Call<Map<String, Boolean>> articlesExistCall(Collection<String> urls) {
-        return wallabagApiService.exists(nonEmptyCollection(urls, "urls"));
+    public Call<Map<String, Boolean>> articlesExistByUrlsCall(Collection<String> urls) {
+        return wallabagApiService.exists(nonEmptyCollection(urls, "urls"), null);
     }
 
     /**
      * Returns a {@code Map} with the results of a bulk "exists" call.
      * The {@code String} key of the map is the article URL
      * and the {@code Boolean} value is the corresponding result (non-{@code null} value).
-     * <p>See {@link #articleExists(String)} for details.
+     * <p>See {@link #articleExistsByUrl(String)} for details.
      * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
      * Don't use this method for more than a couple of URLs or extra lengthy URLs.
      * If unsure, use {@link #getArticlesExistQueryBuilder()}.
@@ -299,26 +438,55 @@ public class WallabagService {
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
-    public Map<String, Boolean> articlesExist(Collection<String> urls)
+    public Map<String, Boolean> articlesExistByUrls(Collection<String> urls)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articlesExistCall(urls).execute());
+        return checkResponseBody(articlesExistByUrlsCall(urls).execute());
     }
 
     /**
-     * See {@link #articlesExistWithId(Collection)}.
+     * See {@link #articlesExistByHashes(Collection)}.
+     *
+     * @param urlHashes SHA-1 hashes of the URLs to check
+     * @return a {@link Call}
+     */
+    public Call<Map<String, Boolean>> articlesExistByHashesCall(Collection<String> urlHashes) {
+        return wallabagApiService.exists(null, nonEmptyCollection(urlHashes, "urlHashes"));
+    }
+
+    /**
+     * Returns a {@code Map} with the results of a bulk "exists" call.
+     * The {@code String} key of the map is the article URL hash
+     * and the {@code Boolean} value is the corresponding result (non-{@code null} value).
+     * <p>See {@link #articleExistsByHash(String)} for details.
+     * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
+     * Don't use this method for more than a couple of URLs.
+     * If unsure, use {@link #getArticlesExistQueryBuilder()}.
+     *
+     * @param urlHashes a {@code Collection} SHA-1 hashes of the URLs to check
+     * @return a {@code Map<String, Boolean>} with the results
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Map<String, Boolean> articlesExistByHashes(Collection<String> urlHashes)
+            throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(articlesExistByHashesCall(urlHashes).execute());
+    }
+
+    /**
+     * See {@link #articlesExistByUrlsWithId(Collection)}.
      *
      * @param urls URLs
      * @return a {@link Call}
      */
-    public Call<Map<String, Integer>> articlesExistWithIdCall(Collection<String> urls) {
-        return wallabagApiService.exists(nonEmptyCollection(urls, "urls"), "1");
+    public Call<Map<String, Integer>> articlesExistByUrlsWithIdCall(Collection<String> urls) {
+        return wallabagApiService.existsWithId(nonEmptyCollection(urls, "urls"), null, "1");
     }
 
     /**
      * Returns a {@code Map} with the results of a bulk "exists" call.
      * The {@code String} key of the map is the article URL
      * and the {@code Integer} value is the corresponding article ID if it exists, {@code null} otherwise.
-     * <p>See {@link #articleExistsWithId(String)} for details.
+     * <p>See {@link #articleExistsByUrlWithId(String)} for details.
      * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
      * Don't use this method for more than a couple of URLs or extra lengthy URLs.
      * If unsure, use {@link #getArticlesExistQueryBuilder()}.
@@ -328,9 +496,38 @@ public class WallabagService {
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
-    public Map<String, Integer> articlesExistWithId(Collection<String> urls)
+    public Map<String, Integer> articlesExistByUrlsWithId(Collection<String> urls)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articlesExistWithIdCall(urls).execute());
+        return checkResponseBody(articlesExistByUrlsWithIdCall(urls).execute());
+    }
+
+    /**
+     * See {@link #articlesExistByUrlsWithId(Collection)}.
+     *
+     * @param urlHashes URL hashes
+     * @return a {@link Call}
+     */
+    public Call<Map<String, Integer>> articlesExistByHashesWithIdCall(Collection<String> urlHashes) {
+        return wallabagApiService.existsWithId(null, nonEmptyCollection(urlHashes, "urlHashes"), "1");
+    }
+
+    /**
+     * Returns a {@code Map} with the results of a bulk "exists" call.
+     * The {@code String} key of the map is the article URL hash
+     * and the {@code Integer} value is the corresponding article ID if it exists, {@code null} otherwise.
+     * <p>See {@link #articleExistsByHashWithId(String)} for details.
+     * <p>Warning: this call uses {@code HTTP GET} which may be limited in terms of total arguments' length.
+     * Don't use this method for more than a couple of URLs.
+     * If unsure, use {@link #getArticlesExistQueryBuilder()}.
+     *
+     * @param urlHashes a {@code Collection} of SHA-1 hashes of the URLs to check
+     * @return a {@code Map<String, Integer>} with the results
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Map<String, Integer> articlesExistByHashesWithId(Collection<String> urlHashes)
+            throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(articlesExistByHashesWithIdCall(urlHashes).execute());
     }
 
     /**

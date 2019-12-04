@@ -14,10 +14,12 @@ import static wallabag.apiwrapper.Utils.nonNullValue;
 
 /**
  * The {@code BatchExistQueryBuilder} class simplifies batch article "exists" calls
- * ({@link WallabagService#articlesExist(Collection)}, {@link WallabagService#articlesExistWithId(Collection)}).
+ * ({@link WallabagService#articlesExistByUrls(Collection)}, {@link WallabagService#articlesExistByUrlsWithId(Collection)}).
  * <p>The {@code exists} API methods accept GET parameters, which total length is limited
  * (the limit depends on the web server configuration). To work around that limitation
  * this class allows to split the query parameters into batches by calculating the request size.
+ * <p>Since version 2.4.0 the wallabag server supports checking for existing articles by SHA-1 hashes of their URLs,
+ * see {@link CompatibilityHelper#isArticleExistsByHashSupported(WallabagService)}.
  * <p>Objects of this class can be reused for making queries with different parameters.
  * <p>This class is not thread safe and cannot be shared between threads.
  */
@@ -83,7 +85,7 @@ public class BatchExistQueryBuilder {
      * @return a {@link Call} that is represented by this builder
      */
     public Call<Map<String, Boolean>> buildCall() {
-        return wallabagService.articlesExistCall(urls);
+        return wallabagService.articlesExistByUrlsCall(urls);
     }
 
     /**
@@ -93,31 +95,31 @@ public class BatchExistQueryBuilder {
      * @return a {@link Call} that is represented by this builder
      */
     public Call<Map<String, Integer>> buildCallWithId() {
-        return wallabagService.articlesExistWithIdCall(urls);
+        return wallabagService.articlesExistByUrlsWithIdCall(urls);
     }
 
     /**
      * Performs the request and returns a {@code Map<String, Boolean>} with the results.
-     * See {@link WallabagService#articlesExist(Collection)} for details.
+     * See {@link WallabagService#articlesExistByUrls(Collection)} for details.
      *
      * @return a {@code Map<String, Boolean>} with the results
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Map<String, Boolean> execute() throws IOException, UnsuccessfulResponseException {
-        return wallabagService.articlesExist(urls);
+        return wallabagService.articlesExistByUrls(urls);
     }
 
     /**
      * Performs the request and returns a {@code Map<String, Integer>} with the results.
-     * See {@link WallabagService#articlesExistWithId(Collection)} for details.
+     * See {@link WallabagService#articlesExistByUrlsWithId(Collection)} for details.
      *
      * @return a {@code Map<String, Integer>} with the results
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Map<String, Integer> executeWithId() throws IOException, UnsuccessfulResponseException {
-        return wallabagService.articlesExistWithId(urls);
+        return wallabagService.articlesExistByUrlsWithId(urls);
     }
 
 }

@@ -1,11 +1,11 @@
 package wallabag.apiwrapper.services;
 
-import wallabag.apiwrapper.models.Tag;
-import wallabag.apiwrapper.models.*;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
+import wallabag.apiwrapper.models.Tag;
+import wallabag.apiwrapper.models.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,16 +26,21 @@ public interface WallabagApiService {
     Call<Article> reloadArticle(@Path("entry") int articleID);
 
     @GET("api/entries/exists.json")
-    Call<ExistsResponse> exists(@Query("url") String url);
+    Call<ExistsResponse> exists(@Query("url") String url, @Query("hashed_url") String hashedUrl);
 
     @GET("api/entries/exists.json")
-    Call<ExistsWithIdResponse> exists(@Query("url") String url, @Query("return_id") String returnId);
+    Call<ExistsWithIdResponse> existsWithId(@Query("url") String url,
+                                            @Query("hashed_url") String hashedUrl,
+                                            @Query("return_id") String returnId);
 
     @GET("api/entries/exists.json")
-    Call<Map<String, Boolean>> exists(@Query("urls[]") Collection<String> urls);
+    Call<Map<String, Boolean>> exists(@Query("urls[]") Collection<String> urls,
+                                      @Query("hashed_urls[]") Collection<String> hashedUrls);
 
     @GET("api/entries/exists.json")
-    Call<Map<String, Integer>> exists(@Query("urls[]") Collection<String> urls, @Query("return_id") String returnId);
+    Call<Map<String, Integer>> existsWithId(@Query("urls[]") Collection<String> urls,
+                                            @Query("hashed_urls[]") Collection<String> hashedUrls,
+                                            @Query("return_id") String returnId);
 
     @DELETE("api/entries/{entry}.json")
     Call<Article> deleteArticle(@Path("entry") int articleID);

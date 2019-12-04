@@ -1,5 +1,7 @@
 package wallabag.apiwrapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 
 import java.io.IOException;
@@ -23,7 +25,10 @@ public class CompatibilityHelper {
     private static final int VERSION_CODE_2_2_0 = 2020000;
     private static final int VERSION_CODE_2_3_0 = 2030000;
     private static final int VERSION_CODE_2_3_7 = 2030700;
+    private static final int VERSION_CODE_2_4_0 = 2040000;
     private static final int VERSION_CODE_NEWER = 999999999;
+
+    private static final Logger LOG = LoggerFactory.getLogger(CompatibilityHelper.class);
 
     /**
      * Returns {@code true} if {@link WallabagService#getArticle(int)} and {@link WallabagService#getArticlesBuilder()}
@@ -125,6 +130,24 @@ public class CompatibilityHelper {
     public static boolean isArticleExistsWithIdSupported(WallabagService wallabagService)
             throws IOException, UnsuccessfulResponseException {
         return isArticleExistsWithIdSupported(wallabagService.getCachedVersion());
+    }
+
+    public static boolean isArticleExistsByHashSupported(String serverVersion) {
+        return getVersionCode(serverVersion) >= VERSION_CODE_2_4_0;
+    }
+
+    public static boolean isArticleExistsByHashSupported(WallabagService wallabagService)
+            throws IOException, UnsuccessfulResponseException {
+        return isArticleExistsByHashSupported(wallabagService.getCachedVersion());
+    }
+
+    static boolean isArticleExistsByHashSupportedSafe(WallabagService wallabagService) {
+        try {
+            return isArticleExistsByHashSupported(wallabagService.getCachedVersion());
+        } catch (IOException | UnsuccessfulResponseException e) {
+            LOG.warn("isArticleExistsByHashSupportedSafe() exception while detecting exists by hash support", e);
+        }
+        return false;
     }
 
     public static boolean isDeleteArticleSupported(String serverVersion) {
@@ -310,9 +333,12 @@ public class CompatibilityHelper {
             case "2.3.7":
             case "2.3.8":
                 return VERSION_CODE_2_3_7;
+
+            case "2.4.0":
+                return VERSION_CODE_2_4_0;
         }
 
-        if ("2.3.8".compareTo(serverVersion) < 0) {
+        if ("2.4.0".compareTo(serverVersion) < 0) {
             return VERSION_CODE_NEWER;
         }
         if ("2.1.3".compareTo(serverVersion) > 0) {

@@ -66,11 +66,11 @@ public class Main {
             List<String> urls = new ArrayList<>();
             urls.add(testUrl);
             urls.add("http://google.com");
-            for (Map.Entry<String, Boolean> entry : service.articlesExist(urls).entrySet()) {
+            for (Map.Entry<String, Boolean> entry : service.articlesExistByUrls(urls).entrySet()) {
                 System.out.println("URL: " + entry.getKey() + ", exists: " + entry.getValue());
             }
             if (CompatibilityHelper.isArticleExistsWithIdSupported(serverVersion)) {
-                for (Map.Entry<String, Integer> entry : service.articlesExistWithId(urls).entrySet()) {
+                for (Map.Entry<String, Integer> entry : service.articlesExistByUrlsWithId(urls).entrySet()) {
                     System.out.println("URL: " + entry.getKey() + ", id: " + entry.getValue());
                 }
             }
