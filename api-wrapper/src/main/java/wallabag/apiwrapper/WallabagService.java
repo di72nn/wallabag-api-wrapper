@@ -1062,6 +1062,50 @@ public class WallabagService {
     }
 
     /**
+     * See {@link #getInfo()}.
+     *
+     * @return a {@link Call}
+     */
+    public Call<Info> getInfoCall() {
+        return wallabagApiService.getInfo();
+    }
+
+    /**
+     * Returns the wallabag instance info as {@link Info}.
+     * This method returns {@code null} if server responds with {@code HTTP 404 Not Found}.
+     * See {@link #getInfo(boolean)}.
+     *
+     * @return the wallabag instance info as {@link Info}
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Info getInfo() throws IOException, UnsuccessfulResponseException {
+        return getInfo(true);
+    }
+
+    /**
+     * Returns the wallabag instance info as {@link Info}.
+     *
+     * @param nullIfNotFound flag indicating whether to return {@code null}
+     *                       instead of throwing {@link NotFoundException}
+     * @return the wallabag instance info as {@link Info}
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Info getInfo(boolean nullIfNotFound) throws IOException, UnsuccessfulResponseException {
+        try {
+            return checkResponseBody(getInfoCall().execute());
+        } catch (NotFoundException nfe) {
+            if (!nullIfNotFound) {
+                throw nfe;
+            }
+            LOG.info("getInfo() returning null instead of throwing NotFoundException");
+            LOG.debug("getInfo()", nfe);
+        }
+        return null;
+    }
+
+    /**
      * See {@link #getVersion()}.
      *
      * @return a {@link Call}

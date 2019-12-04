@@ -92,6 +92,9 @@ public interface WallabagApiService {
     @DELETE("api/annotations/{annotation}.json")
     Call<Annotation> deleteAnnotation(@Path("annotation") int annotationID);
 
+    @GET("api/info.json")
+    Call<Info> getInfo();
+
     @GET("api/version.json")
     Call<String> getVersion();
 

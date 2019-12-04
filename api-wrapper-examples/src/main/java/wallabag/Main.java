@@ -38,6 +38,7 @@ public class Main {
         try {
             String serverVersion = service.getVersion();
             System.out.println("Server version: " + serverVersion);
+            System.out.println("Info: " + service.getInfo());
 
             String testUrl = "http://doc.wallabag.org/en/master/developer/api.html";
 

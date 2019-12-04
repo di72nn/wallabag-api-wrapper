@@ -294,6 +294,15 @@ public class CompatibilityHelper {
         return isDeleteAnnotationSupported(wallabagService.getCachedVersion());
     }
 
+    public static boolean isInfoSupported(String serverVersion) {
+        return getVersionCode(serverVersion) >= VERSION_CODE_2_4_0;
+    }
+
+    public static boolean isInfoSupported(WallabagService wallabagService)
+            throws IOException, UnsuccessfulResponseException {
+        return isInfoSupported(wallabagService.getCachedVersion());
+    }
+
     public static boolean isBaseSupported(String serverVersion) {
         return getVersionCode(serverVersion) >= VERSION_CODE_2_1_3;
     }
