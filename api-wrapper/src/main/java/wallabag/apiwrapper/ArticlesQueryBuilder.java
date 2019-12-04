@@ -67,12 +67,35 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
 
     }
 
+    /**
+     * The {@code DetailLevel} enum represents the available detail levels.
+     */
+    public enum DetailLevel {
+
+        /** Load all data. */
+        FULL("full"),
+        /** Load everything except {@link Article#content}. Makes for lighter responses. */
+        METADATA("metadata");
+
+        private String value;
+
+        DetailLevel(String value) {
+            this.value = value;
+        }
+
+        String apiValue() {
+            return value;
+        }
+
+    }
+
     private final WallabagService wallabagService;
 
     protected Boolean archive;
     protected Boolean starred;
     protected SortCriterion sortCriterion;
     protected SortOrder sortOrder;
+    protected DetailLevel detailLevel;
     protected int page = 1;
     protected int perPage = 30;
     protected long since = 0;
@@ -138,6 +161,18 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
     }
 
     /**
+     * Sets the detail level for the result returned by the server, returns this builder.
+     * <p>Defaults to {@link DetailLevel#FULL}.
+     *
+     * @param detailLevel the detail level to set, {@code null}able
+     * @return this builder
+     */
+    public ArticlesQueryBuilder detailLevel(DetailLevel detailLevel) {
+        this.detailLevel = detailLevel;
+        return this;
+    }
+
+    /**
      * Sets the number of the page to request from the server, returns this builder.
      * <p>1-based indexing. Defaults to {@code 1}.
      *
@@ -197,6 +232,10 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
         return (sortOrder != null ? sortOrder : SortOrder.DESCENDING).apiValue();
     }
 
+    protected String getDetailLevelString() {
+        return (detailLevel != null ? detailLevel : DetailLevel.FULL).apiValue();
+    }
+
     protected Map<String, String> build() {
         Map<String, String> parameters = new HashMap<>();
 
@@ -204,6 +243,7 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
         addParameter(parameters, "starred", Utils.booleanToNullableNumberString(starred));
         parameters.put("sort", getSortCriterionString());
         parameters.put("order", getOrderString());
+        parameters.put("detail", getDetailLevelString());
         parameters.put("page", String.valueOf(page));
         parameters.put("perPage", String.valueOf(perPage));
         addParameter(parameters, "tags", getTagsString());
@@ -295,6 +335,7 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
         copy.starred = starred;
         copy.sortCriterion = sortCriterion;
         copy.sortOrder = sortOrder;
+        copy.detailLevel = detailLevel;
         copy.page = page;
         copy.perPage = perPage;
         copyTags(copy);
