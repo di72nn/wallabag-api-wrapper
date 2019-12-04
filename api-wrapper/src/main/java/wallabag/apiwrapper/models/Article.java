@@ -23,6 +23,17 @@ public class Article {
     @Json(name = "hashed_url")
     public String hashedUrl;
 
+    /**
+     * The URL as it was given to the server
+     * (the {@link #url} may be different due to normalization or redirects). {@code null}able.
+     */
+    @Json(name = "given_url")
+    public String givenUrl;
+
+    /** The SHA-1 hash of {@link #givenUrl}. {@code null}able. */
+    @Json(name = "hashed_given_url")
+    public String hashedGivenUrl;
+
     /** The title of the article. */
     public String title;
 
