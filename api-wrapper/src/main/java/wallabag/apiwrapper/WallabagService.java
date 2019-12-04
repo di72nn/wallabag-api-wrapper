@@ -1,21 +1,23 @@
 package wallabag.apiwrapper;
 
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.moshi.MoshiConverterFactory;
 import wallabag.apiwrapper.exceptions.AuthorizationException;
 import wallabag.apiwrapper.exceptions.NotFoundException;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import wallabag.apiwrapper.models.*;
 import wallabag.apiwrapper.models.adapters.NumericBooleanAdapter;
 import wallabag.apiwrapper.services.WallabagApiService;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.moshi.MoshiConverterFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,7 +36,7 @@ import static wallabag.apiwrapper.Utils.*;
  * <p>Methods marked to throw {@link UnsuccessfulResponseException} (or directly {@link NotFoundException})
  * throw {@link NotFoundException} as a result of 404 HTTP code returned by server.
  * In some cases the "not found" result may be considered as an acceptable result,
- * for example a {@link #deleteArticle(int)} call for an already deleted article.
+ * for example a {@link #deleteArticle(int, boolean)} call for an already deleted article.
  * Note however that {@link NotFoundException} is also thrown if the {@code apiBaseURL} is incorrect.
  * <p>Methods marked to throw {@link UnsuccessfulResponseException} (or directly {@link AuthorizationException})
  * throw {@link AuthorizationException} if it was not possible to get access
@@ -53,6 +55,8 @@ import static wallabag.apiwrapper.Utils.*;
  * <p>This class is thread safe. For additional thread safety limitations see {@link ParameterHandler} description.
  */
 public class WallabagService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(WallabagService.class);
 
     private final WallabagApiService wallabagApiService;
 
@@ -561,12 +565,76 @@ public class WallabagService {
     }
 
     /**
-     * See {@link #deleteArticle(int)}.
+     * Performs a server-side deletion of an article with the specified ID,
+     * returns {@code true} if the article was deleted successfully,
+     * {@code false} if the server responded with "not found".
+     * <p>This method swallows a possible {@link NotFoundException} of the delete operation.
+     * This method does not swallow a {@link NotFoundException} of a {@link #getCachedVersion()} call.
+     * <p>This method does auto-detection of the proper endpoint method
+     * based on the result of {@link #getCachedVersion()}.
+     *
+     * @param articleID the ID of the article to delete
+     * @return {@code true} if the article was deleted successfully,
+     * {@code false} if the server responded with "not found"
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if some of the endpoint methods were not found.
+     *                                       See {@link WallabagService} description for additional details
+     */
+    public boolean deleteArticle(int articleID) throws IOException, UnsuccessfulResponseException {
+        return deleteArticle(articleID, true);
+    }
+
+    /**
+     * Performs a server-side deletion of an article with the specified ID,
+     * returns {@code true} if the article was deleted successfully,
+     * {@code false} if the server responded with "not found",
+     * but it was ignored because of the {@code ignoreNotFound} flag.
+     * <p>This method swallows a possible {@link NotFoundException} of the delete operation
+     * if {@code ignoreNotFound} is set to {@code true}.
+     * This method does not swallow a {@link NotFoundException} of a {@link #getCachedVersion()} call.
+     * <p>This method does auto-detection of the proper endpoint method
+     * based on the result of {@link #getCachedVersion()}.
+     *
+     * @param articleID      the ID of the article to delete
+     * @param ignoreNotFound flag indicating whether to ignore a possible {@link NotFoundException} during deletion
+     * @return {@code true} if the article was deleted successfully,
+     * {@code false} if the server responded with "not found",
+     * but it was ignored because of the {@code ignoreNotFound} flag
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       and {@code ignoreNotFound} was not set to {@code true}.
+     *                                       See {@link WallabagService} description for additional details
+     */
+    public boolean deleteArticle(int articleID, boolean ignoreNotFound)
+            throws IOException, UnsuccessfulResponseException {
+        boolean deleteArticleWithIdSupported = CompatibilityHelper
+                .isDeleteArticleWithIdSupported(this);
+        try {
+            if (deleteArticleWithIdSupported) {
+                deleteArticleWithId(articleID);
+            } else {
+                deleteArticleWithObject(articleID);
+            }
+            return true;
+        } catch (NotFoundException nfe) {
+            if (ignoreNotFound) {
+                LOG.info("deleteArticle() ignoring NFE while deleting article with id: " + articleID, nfe);
+            } else {
+                throw nfe;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * See {@link #deleteArticleWithObject(int)}.
      *
      * @param articleID ID
      * @return a {@link Call}
      */
-    public Call<Article> deleteArticleCall(int articleID) {
+    public Call<Article> deleteArticleWithObjectCall(int articleID) {
         return wallabagApiService.deleteArticle(nonNegativeNumber(articleID, "articleID"));
     }
 
@@ -576,6 +644,7 @@ public class WallabagService {
      * the {@link Article#id} in the returned object is not guaranteed to contain a correct value:
      * it may be 0 or {@code null}; in case of {@code null} the method throws
      * {@link com.squareup.moshi.JsonDataException}.
+     * <p>N.B. This method is present for completeness, the recommended method is {@link #deleteArticle(int)}.
      *
      * @param articleID the ID of the article to delete
      * @return an {@link Article} object corresponding to the deleted article
@@ -584,8 +653,8 @@ public class WallabagService {
      * @throws NotFoundException             if the article with the specified ID was not found.
      *                                       See {@link WallabagService} description for additional details
      */
-    public Article deleteArticle(int articleID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteArticleCall(articleID).execute());
+    public Article deleteArticleWithObject(int articleID) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(deleteArticleWithObjectCall(articleID).execute());
     }
 
     /**
@@ -600,6 +669,7 @@ public class WallabagService {
 
     /**
      * Performs server-side deletion of an article, returns the ID of the deleted article.
+     * <p>N.B. This method is present for completeness, the recommended method is {@link #deleteArticle(int)}.
      *
      * @param articleID the ID of the article to delete
      * @return an {@link Integer} ID of the deleted article

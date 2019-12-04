@@ -145,7 +145,8 @@ public class Main {
                     article.content, article.language, article.previewPicture, article.publishedAt, article.authors,
                     article.originUrl, article.isPublic, article.publicUid));
 
-            System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
+            service.deleteArticle(article.id);
+            System.out.println("Deleted article");
 
             article = service.addArticleBuilder("https://example.com/test")
                     .title("Test article")
@@ -161,11 +162,8 @@ public class Main {
                     article.title, article.content, article.language, article.previewPicture, article.publishedAt,
                     article.authors, article.originUrl));
 
-            if (CompatibilityHelper.isDeleteArticleWithIdSupported(serverVersion)) {
-                System.out.println("Deleted article id: " + service.deleteArticleWithId(article.id));
-            } else {
-                System.out.println("Deleted article title: " + service.deleteArticle(article.id).title);
-            }
+            service.deleteArticle(article.id);
+            System.out.println("Deleted article");
 
             Articles articles = service.getArticlesBuilder().perPage(3).execute();
             System.out.println("Items length: " + articles.embedded.items.size());
