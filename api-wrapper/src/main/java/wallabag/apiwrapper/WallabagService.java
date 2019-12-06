@@ -143,12 +143,21 @@ public class WallabagService {
     }
 
     /**
-     * Returns a builder for setting parameters of a query for {@link Articles}.
+     * Returns an {@link Articles} query builder.
      *
-     * @return a builder for setting parameters of a query for {@link Articles}
+     * @return an {@link Articles} query builder
      */
     public ArticlesQueryBuilder getArticlesBuilder() {
         return new ArticlesQueryBuilder(this);
+    }
+
+    /**
+     * Returns an {@link Articles} search query builder.
+     *
+     * @return an {@link Articles} search query builder
+     */
+    public ArticlesSearchBuilder searchArticlesBuilder() {
+        return new ArticlesSearchBuilder(this);
     }
 
     /**
@@ -193,6 +202,14 @@ public class WallabagService {
 
     Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
         return checkResponseBody(getArticlesCall(parameters).execute());
+    }
+
+    Call<Articles> searchCall(Map<String, String> parameters) {
+        return wallabagApiService.search(parameters);
+    }
+
+    Articles search(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(searchCall(parameters).execute());
     }
 
     Call<Article> addArticleCall(RequestBody requestBody) {

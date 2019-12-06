@@ -1,17 +1,14 @@
 package wallabag.apiwrapper;
 
+import retrofit2.Call;
 import wallabag.apiwrapper.exceptions.NotFoundException;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import wallabag.apiwrapper.models.Article;
 import wallabag.apiwrapper.models.Articles;
-import retrofit2.Call;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Map;
-
-import static wallabag.apiwrapper.Utils.isEmpty;
-import static wallabag.apiwrapper.Utils.positiveNumber;
 
 /**
  * The {@code ArticlesQueryBuilder} class represents a builder for accumulating parameters
@@ -19,7 +16,7 @@ import static wallabag.apiwrapper.Utils.positiveNumber;
  * <p>Objects of this class can be reused for making queries with different parameters.
  * <p>This class is not thread safe and cannot be shared between threads.
  */
-public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuilder> {
+public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<ArticlesQueryBuilder> {
 
     /**
      * The {@code SortCriterion} enum represent the available sort criteria.
@@ -89,24 +86,69 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
 
     }
 
+    static class TagsBuilder extends AbstractTagsBuilder<TagsBuilder> {
+        @Override
+        protected TagsBuilder self() {
+            return this;
+        }
+    }
+
     private final WallabagService wallabagService;
 
+    protected TagsBuilder tagsBuilder;
     protected Boolean archive;
     protected Boolean starred;
     protected SortCriterion sortCriterion;
     protected SortOrder sortOrder;
     protected DetailLevel detailLevel;
-    protected int page = 1;
-    protected int perPage = 30;
     protected long since = 0;
     protected Boolean isPublic;
 
     ArticlesQueryBuilder(WallabagService wallabagService) {
         this.wallabagService = wallabagService;
+        tagsBuilder = new TagsBuilder();
     }
 
     @Override
     protected ArticlesQueryBuilder self() {
+        return this;
+    }
+
+    /**
+     * Adds a tag to this builder, returns the builder.
+     * Duplicates are silently ignored.
+     *
+     * @param tag the tag to add
+     * @return this builder
+     * @throws NullPointerException     if the {@code tag} is {@code null}
+     * @throws IllegalArgumentException if the {@code tag} is an empty {@code String}
+     */
+    public ArticlesQueryBuilder tag(String tag) {
+        tagsBuilder.tag(tag);
+        return this;
+    }
+
+    /**
+     * Adds tags from the specified {@code Collection} to this builder, returns the builder.
+     * Duplicates are silently ignored.
+     *
+     * @param tags a {@code Collection} with tags to add
+     * @return this builder
+     * @throws NullPointerException     if the {@code tags} collection is {@code null} or if it contains a {@code null}
+     * @throws IllegalArgumentException if the {@code tags} collection contains an empty {@code String}
+     */
+    public ArticlesQueryBuilder tags(Collection<String> tags) {
+        tagsBuilder.tags(tags);
+        return this;
+    }
+
+    /**
+     * Resets the tags that were previously added to this builder, returns the builder.
+     *
+     * @return this builder
+     */
+    public ArticlesQueryBuilder resetTags() {
+        tagsBuilder.resetTags();
         return this;
     }
 
@@ -173,32 +215,6 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
     }
 
     /**
-     * Sets the number of the page to request from the server, returns this builder.
-     * <p>1-based indexing. Defaults to {@code 1}.
-     *
-     * @param page the number of the page to request
-     * @return this builder
-     * @throws IllegalArgumentException if {@code page <= 0}
-     */
-    public ArticlesQueryBuilder page(int page) {
-        this.page = positiveNumber(page, "page");
-        return this;
-    }
-
-    /**
-     * Sets the number of articles per page to request from the server, returns this builder.
-     * <p>Defaults to {@code 30}.
-     *
-     * @param perPage the number of articles per page to request
-     * @return this builder
-     * @throws IllegalArgumentException if {@code perPage <= 0}
-     */
-    public ArticlesQueryBuilder perPage(int perPage) {
-        this.perPage = positiveNumber(perPage, "perPage");
-        return this;
-    }
-
-    /**
      * Sets the timestamp in milliseconds since when the entries will be filtered by
      * {@link Article#updatedAt}, returns this builder.
      * <p>{@code 0} means no filtering. Defaults to {@code 0}.
@@ -236,25 +252,20 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
         return (detailLevel != null ? detailLevel : DetailLevel.FULL).apiValue();
     }
 
+    @Override
     protected Map<String, String> build() {
-        Map<String, String> parameters = new HashMap<>();
+        Map<String, String> parameters = super.build();
 
         addParameter(parameters, "archive", Utils.booleanToNullableNumberString(archive));
         addParameter(parameters, "starred", Utils.booleanToNullableNumberString(starred));
         parameters.put("sort", getSortCriterionString());
         parameters.put("order", getOrderString());
         parameters.put("detail", getDetailLevelString());
-        parameters.put("page", String.valueOf(page));
-        parameters.put("perPage", String.valueOf(perPage));
-        addParameter(parameters, "tags", getTagsString());
+        addParameter(parameters, "tags", tagsBuilder.getTagsString());
         parameters.put("since", String.valueOf(since / 1000));
         addParameter(parameters, "public", Utils.booleanToNullableNumberString(isPublic));
 
         return parameters;
-    }
-
-    protected void addParameter(Map<String, String> parameters, String paramName, String paramValue) {
-        if (!isEmpty(paramValue)) parameters.put(paramName, paramValue);
     }
 
     /**
@@ -276,73 +287,30 @@ public class ArticlesQueryBuilder extends AbstractTagsBuilder<ArticlesQueryBuild
      * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
      * @throws NotFoundException             if {@link #page(int)} was set to value {@code > }{@link Articles#pages}
      */
+    @Override
     public Articles execute() throws IOException, UnsuccessfulResponseException {
         return wallabagService.getArticles(build());
     }
 
-    /**
-     * Returns an {@link ArticleIterator} for iterating over all {@link Article}s
-     * returned for the parameters provided by this builder.
-     * <p>The returned iterator handles {@link NotFoundException} as empty internally.
-     * <p>The iteration starts from the page set with {@link #page(int)}.
-     *
-     * @return an {@link ArticleIterator} object
-     */
-    public ArticleIterator articleIterator() {
-        return articleIterator(true);
-    }
-
-    /**
-     * Returns an {@link ArticleIterator} for iterating over all {@link Article}s
-     * returned for the parameters provided by this builder.
-     * <p>The iteration starts from the page set with {@link #page(int)}.
-     *
-     * @param notFoundAsEmpty whether to handle {@link NotFoundException} as empty internally
-     * @return an {@link ArticleIterator} object
-     */
-    public ArticleIterator articleIterator(boolean notFoundAsEmpty) {
-        return new ArticleIterator(copy(), notFoundAsEmpty);
-    }
-
-    /**
-     * Returns an {@link ArticlesPageIterator} for iterating over {@link Articles}
-     * returned for the parameters provided by this builder.
-     * <p>The returned iterator handles {@link NotFoundException} as empty internally.
-     * <p>The iteration starts from the page set with {@link #page(int)}.
-     *
-     * @return an {@link ArticlesPageIterator} object
-     */
-    public ArticlesPageIterator pageIterator() {
-        return pageIterator(true);
-    }
-
-    /**
-     * Returns an {@link ArticlesPageIterator} for iterating over {@link Articles}
-     * returned for the parameters provided by this builder.
-     * <p>The iteration starts from the page set with {@link #page(int)}.
-     *
-     * @param notFoundAsEmpty whether to handle {@link NotFoundException} as empty internally
-     * @return an {@link ArticlesPageIterator} object
-     */
-    public ArticlesPageIterator pageIterator(boolean notFoundAsEmpty) {
-        return new ArticlesPageIterator(copy(), notFoundAsEmpty);
-    }
-
+    @Override
     protected ArticlesQueryBuilder copy() {
-        ArticlesQueryBuilder copy = new ArticlesQueryBuilder(wallabagService);
+        ArticlesQueryBuilder copy = super.copy();
 
         copy.archive = archive;
         copy.starred = starred;
         copy.sortCriterion = sortCriterion;
         copy.sortOrder = sortOrder;
         copy.detailLevel = detailLevel;
-        copy.page = page;
-        copy.perPage = perPage;
-        copyTags(copy);
+        tagsBuilder.copyTags(copy.tagsBuilder);
         copy.since = since;
         copy.isPublic = isPublic;
 
         return copy;
+    }
+
+    @Override
+    protected ArticlesQueryBuilder createCopyObject() {
+        return new ArticlesQueryBuilder(wallabagService);
     }
 
 }

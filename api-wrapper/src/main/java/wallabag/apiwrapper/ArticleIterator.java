@@ -19,8 +19,8 @@ public class ArticleIterator {
     protected ArticlesPageIterator pageIterator;
     protected Iterator<Article> articles;
 
-    ArticleIterator(ArticlesQueryBuilder articlesQueryBuilder, boolean notFoundAsEmpty) {
-        pageIterator = new ArticlesPageIterator(articlesQueryBuilder, notFoundAsEmpty);
+    ArticleIterator(GenericPaginatingQueryBuilder<?> queryBuilder, boolean notFoundAsEmpty) {
+        pageIterator = new ArticlesPageIterator(queryBuilder, notFoundAsEmpty);
     }
 
     /**

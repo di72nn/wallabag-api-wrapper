@@ -1,10 +1,10 @@
 package wallabag.apiwrapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import wallabag.apiwrapper.exceptions.NotFoundException;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
 import wallabag.apiwrapper.models.Articles;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -18,7 +18,7 @@ public class ArticlesPageIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(ArticlesPageIterator.class);
 
-    private final ArticlesQueryBuilder queryBuilder;
+    private final GenericPaginatingQueryBuilder<?> queryBuilder;
     private final boolean notFoundAsEmpty;
 
     private int currentPage;
@@ -26,8 +26,8 @@ public class ArticlesPageIterator {
     private Articles articles;
     private boolean lastPageReached;
 
-    ArticlesPageIterator(ArticlesQueryBuilder articlesQueryBuilder, boolean notFoundAsEmpty) {
-        this.queryBuilder = articlesQueryBuilder;
+    ArticlesPageIterator(GenericPaginatingQueryBuilder<?> queryBuilder, boolean notFoundAsEmpty) {
+        this.queryBuilder = queryBuilder;
         this.notFoundAsEmpty = notFoundAsEmpty;
         currentPage = queryBuilder.page;
     }

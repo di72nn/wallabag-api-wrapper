@@ -19,6 +19,9 @@ public interface WallabagApiService {
     @GET("api/entries.json")
     Call<Articles> getArticles(@QueryMap Map<String, String> parameters);
 
+    @GET("api/search.json")
+    Call<Articles> search(@QueryMap Map<String, String> parameters);
+
     @POST("api/entries.json")
     Call<Article> addArticle(@Body RequestBody requestBody);
 
