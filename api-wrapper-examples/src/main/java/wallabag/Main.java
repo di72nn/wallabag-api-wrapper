@@ -40,7 +40,7 @@ public class Main {
             System.out.println("Server version: " + serverVersion);
             System.out.println("Info: " + service.getInfo());
 
-            String testUrl = "http://doc.wallabag.org/en/master/developer/api.html";
+            String testUrl = "https://doc.wallabag.org/en/";
 
             Article article = service.addArticleBuilder(testUrl)
                     .starred(true)
@@ -111,9 +111,9 @@ public class Main {
             if (idForRemoval >= 0) System.out.println("Deleted tag label: " + service.deleteTag(idForRemoval).label);
 
             Annotation.Range range = new Annotation.Range();
-            range.startOffset = 1;
-            range.endOffset = 5;
-            range.start = "/ul[1]/li[1]";
+            range.startOffset = 9;
+            range.endOffset = 12;
+            range.start = "/p[3]";
             range.end = "/ul[1]/li[1]";
             List<Annotation.Range> ranges = new ArrayList<>(1);
             ranges.add(range);
