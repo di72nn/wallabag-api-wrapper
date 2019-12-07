@@ -93,8 +93,6 @@ public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<Articles
         }
     }
 
-    private final WallabagService wallabagService;
-
     protected TagsBuilder tagsBuilder;
     protected Boolean archive;
     protected Boolean starred;
@@ -105,7 +103,7 @@ public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<Articles
     protected Boolean isPublic;
 
     ArticlesQueryBuilder(WallabagService wallabagService) {
-        this.wallabagService = wallabagService;
+        super(wallabagService);
         tagsBuilder = new TagsBuilder();
     }
 
@@ -268,28 +266,20 @@ public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<Articles
         return parameters;
     }
 
-    /**
-     * Returns a {@link Call} that is represented by this builder.
-     * The {@link #execute()} method is a shortcut that executes this call.
-     *
-     * @return a {@link Call} that is represented by this builder
-     */
+    @Override
     public Call<Articles> buildCall() {
         return wallabagService.getArticlesCall(build());
     }
 
     /**
-     * Returns an {@link Articles} object that is the result of a query
-     * with the parameters provided by this builder.
+     * {@inheritDoc}
      *
-     * @return an {@link Articles} object
-     * @throws IOException                   in case of network errors
-     * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
-     * @throws NotFoundException             if {@link #page(int)} was set to value {@code > }{@link Articles#pages}
+     * @throws NotFoundException if {@link #page(int)} was set to a value {@code > }{@link Articles#pages}
+     *                           (depends on the {@code notFoundPolicy})
      */
     @Override
-    public Articles execute() throws IOException, UnsuccessfulResponseException {
-        return wallabagService.getArticles(build());
+    public Articles execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> wallabagService.getArticles(build()), wallabagService);
     }
 
     @Override

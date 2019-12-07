@@ -16,12 +16,10 @@ import java.util.Map;
  */
 public class ArticlesSearchBuilder extends GenericPaginatingQueryBuilder<ArticlesSearchBuilder> {
 
-    private final WallabagService wallabagService;
-
     protected String term;
 
     ArticlesSearchBuilder(WallabagService wallabagService) {
-        this.wallabagService = wallabagService;
+        super(wallabagService);
     }
 
     @Override
@@ -49,28 +47,20 @@ public class ArticlesSearchBuilder extends GenericPaginatingQueryBuilder<Article
         return parameters;
     }
 
-    /**
-     * Returns a {@link Call} that is represented by this builder.
-     * The {@link #execute()} method is a shortcut that executes this call.
-     *
-     * @return a {@link Call} that is represented by this builder
-     */
+    @Override
     public Call<Articles> buildCall() {
         return wallabagService.searchCall(build());
     }
 
     /**
-     * Returns an {@link Articles} object that is the result of a query
-     * with the parameters provided by this builder.
+     * {@inheritDoc}
      *
-     * @return an {@link Articles} object
-     * @throws IOException                   in case of network errors
-     * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
-     * @throws NotFoundException             if {@link #page(int)} was set to value {@code > }{@link Articles#pages}
+     * @throws NotFoundException if {@link #page(int)} was set to value {@code > }{@link Articles#pages}
+     *                           and the {@code notFoundPolicy} allows it
      */
     @Override
-    public Articles execute() throws IOException, UnsuccessfulResponseException {
-        return wallabagService.search(build());
+    public Articles execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> wallabagService.search(build()), wallabagService);
     }
 
     @Override

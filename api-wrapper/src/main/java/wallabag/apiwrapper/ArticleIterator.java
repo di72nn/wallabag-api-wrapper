@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 /**
  * The {@code ArticleIterator} class allows for easier iteration over all articles
  * returned as a result for {@link ArticlesQueryBuilder} queries.
+ * <p>See {@link ArticlesPageIterator} for details regarding {@link NotFoundPolicy}s.
  * <p>This class is not thread safe and cannot be shared between threads.
  */
 public class ArticleIterator {
@@ -19,13 +20,13 @@ public class ArticleIterator {
     protected ArticlesPageIterator pageIterator;
     protected Iterator<Article> articles;
 
-    ArticleIterator(GenericPaginatingQueryBuilder<?> queryBuilder, boolean notFoundAsEmpty) {
-        pageIterator = new ArticlesPageIterator(queryBuilder, notFoundAsEmpty);
+    ArticleIterator(GenericPaginatingQueryBuilder<?> queryBuilder, NotFoundPolicy notFoundPolicy) {
+        pageIterator = new ArticlesPageIterator(queryBuilder, notFoundPolicy);
     }
 
     /**
      * Returns {@code true} if the iteration has more elements.
-     * <p>See {@link ArticlesPageIterator#hasNext()} regarding {@code NotFoundException}.
+     * <p>See {@link ArticlesPageIterator#hasNext()} regarding {@code NotFoundException}s.
      * <p>Implementation note: this method actually fetches the next "page",
      * so a subsequent {@link #next()} call only returns the value.
      *
@@ -33,7 +34,7 @@ public class ArticleIterator {
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
      * @throws NotFoundException             if the requested page was set to value {@code > }{@link Articles#pages}
-     *                                       <em>and</em> {@code notFoundAsEmpty} was not set to {@code true}
+     *                                       <em>and</em> the used {@code NotFoundPolicy} rethrows exceptions
      */
     public boolean hasNext() throws IOException, UnsuccessfulResponseException {
         if (articles != null && articles.hasNext()) return true;
@@ -52,7 +53,7 @@ public class ArticleIterator {
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
      * @throws NotFoundException             if the requested page was set to value {@code > }{@link Articles#pages}
-     *                                       <em>and</em> {@code notFoundAsEmpty} was not set to {@code true}
+     *                                       <em>and</em> the used {@code NotFoundPolicy} rethrows exceptions
      * @throws NoSuchElementException        if the iteration has no more elements
      */
     public Article next() throws IOException, UnsuccessfulResponseException {

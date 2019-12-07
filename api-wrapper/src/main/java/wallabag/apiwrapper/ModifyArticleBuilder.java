@@ -2,8 +2,6 @@ package wallabag.apiwrapper;
 
 import okhttp3.FormBody;
 import okhttp3.RequestBody;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import wallabag.apiwrapper.exceptions.NotFoundException;
 import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
@@ -20,8 +18,6 @@ import static wallabag.apiwrapper.Utils.nonNegativeNumber;
  * <p>This class is not thread safe and cannot be shared between threads.
  */
 public class ModifyArticleBuilder extends AbstractArticleBuilder<ModifyArticleBuilder> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ModifyArticleBuilder.class);
 
     protected final WallabagService wallabagService;
 
@@ -79,43 +75,32 @@ public class ModifyArticleBuilder extends AbstractArticleBuilder<ModifyArticleBu
 
     /**
      * Performs the modification and returns an {@link Article} object
-     * corresponding to the modified article entry
-     * or {@code null} if the server responded with "not found".
+     * corresponding to the modified article entry or {@code null} if the article was not found.
+     * <p>This method is an alias for {@link #execute(NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
-     * @return an {@link Article} object or {@code null} if the server responded with "not found"
+     * @return an {@link Article} object or {@code null} if the article was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
      */
     public Article execute() throws IOException, UnsuccessfulResponseException {
-        return execute(true);
+        return execute(NotFoundPolicy.SMART);
     }
 
     /**
      * Performs the modification and returns an {@link Article} object
-     * corresponding to the modified article entry.
-     * This method returns {@code null} if the server responded with "not found",
-     * but the {@code ignoreNotFound} flag was set to {@code true}.
+     * corresponding to the modified article entry or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy}).
      *
-     * @param nullIfNotFound flag indicating whether to return {@code null}
-     *                       instead of throwing {@link NotFoundException}
-     * @return an {@link Article} object or {@code null} if the server responded with "not found",
-     * but the {@code ignoreNotFound} flag was set to {@code true}
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Article} object or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException in case of known wallabag-specific errors
      * @throws NotFoundException             if the article with the specified ID was not found
-     *                                       and {@code nullIfNotFound} was not set to {@code true}
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Article execute(boolean nullIfNotFound) throws IOException, UnsuccessfulResponseException {
-        try {
-            return wallabagService.modifyArticle(id, build());
-        } catch (NotFoundException nfe) {
-            if (!nullIfNotFound) {
-                throw nfe;
-            }
-            LOG.info("execute() returning null instead of throwing NotFoundException");
-            LOG.debug("NFE", nfe);
-        }
-        return null;
+    public Article execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> wallabagService.modifyArticle(id, build()), wallabagService);
     }
 
 }

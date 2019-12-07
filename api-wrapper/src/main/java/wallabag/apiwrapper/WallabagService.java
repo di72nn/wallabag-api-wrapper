@@ -6,8 +6,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -36,8 +34,12 @@ import static wallabag.apiwrapper.Utils.*;
  * <p>Methods marked to throw {@link UnsuccessfulResponseException} (or directly {@link NotFoundException})
  * throw {@link NotFoundException} as a result of 404 HTTP code returned by server.
  * In some cases the "not found" result may be considered as an acceptable result,
- * for example a {@link #deleteArticle(int, boolean)} call for an already deleted article.
- * Note however that {@link NotFoundException} is also thrown if the {@code apiBaseURL} is incorrect.
+ * for example a {@link #deleteArticle(int)} call for an already deleted article.
+ * Note however that {@link NotFoundException} is also thrown if the {@code apiBaseURL} is incorrect
+ * or the server is not available or misconfigured.
+ * Most of the methods use {@link NotFoundPolicy#SMART} by default
+ * to throw {@code NotFoundException}s only when necessary.
+ * Some other methods accept {@link NotFoundPolicy} that can alter that behavior.
  * <p>Methods marked to throw {@link UnsuccessfulResponseException} (or directly {@link AuthorizationException})
  * throw {@link AuthorizationException} if it was not possible to get access
  * using the provided {@link ParameterHandler}.
@@ -55,8 +57,6 @@ import static wallabag.apiwrapper.Utils.*;
  * <p>This class is thread safe. For additional thread safety limitations see {@link ParameterHandler} description.
  */
 public class WallabagService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(WallabagService.class);
 
     private final WallabagApiService wallabagApiService;
 
@@ -233,20 +233,42 @@ public class WallabagService {
     /**
      * Performs a server-side "reload" ("refetch") of an article with the specified ID
      * and returns a resulting {@link Article} object.
+     * <p>This method is an alias for {@link #reloadArticle(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to reload
      * @return a reloaded article, or {@code null} if the server failed to reload the article
+     * or an article with the specified ID was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Article reloadArticle(int articleID) throws IOException, UnsuccessfulResponseException {
+        return reloadArticle(articleID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Performs a server-side "reload" ("refetch") of an article with the specified ID
+     * and returns a resulting {@link Article} object.
+     * This methods returns {@code null} if the server failed to reload the article
+     * or if an article with the specified ID was not found (depends on the {@code notFoundPolicy}).
+     *
+     * @param articleID      the ID of the article to reload
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return a reloaded article, or {@code null} if the server failed to reload the article
+     * or if an article with the specified ID was not found (in accordance with the {@code notFoundPolicy})
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if an article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
+     */
+    public Article reloadArticle(int articleID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
         Response<Article> response = reloadArticleCall(articleID).execute();
 
         if (response.code() == 304) { // couldn't update
             return null;
         }
 
-        return checkResponseBody(response);
+        return notFoundPolicy.call(() -> checkResponseBody(response), this);
     }
 
     /**
@@ -584,65 +606,50 @@ public class WallabagService {
     /**
      * Performs a server-side deletion of an article with the specified ID,
      * returns {@code true} if the article was deleted successfully,
-     * {@code false} if the server responded with "not found".
-     * <p>This method swallows a possible {@link NotFoundException} of the delete operation.
-     * This method does not swallow a {@link NotFoundException} of a {@link #getCachedVersion()} call.
+     * {@code false} if an article with the specified ID was not found.
      * <p>This method does auto-detection of the proper endpoint method
      * based on the result of {@link #getCachedVersion()}.
+     * <p>This method is an alias for {@link #deleteArticle(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to delete
      * @return {@code true} if the article was deleted successfully,
-     * {@code false} if the server responded with "not found"
+     * {@code false} if an article with the specified ID was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-     * @throws NotFoundException             if some of the endpoint methods were not found.
-     *                                       See {@link WallabagService} description for additional details
      */
     public boolean deleteArticle(int articleID) throws IOException, UnsuccessfulResponseException {
-        return deleteArticle(articleID, true);
+        return deleteArticle(articleID, NotFoundPolicy.SMART);
     }
 
     /**
      * Performs a server-side deletion of an article with the specified ID,
      * returns {@code true} if the article was deleted successfully,
-     * {@code false} if the server responded with "not found",
-     * but it was ignored because of the {@code ignoreNotFound} flag.
-     * <p>This method swallows a possible {@link NotFoundException} of the delete operation
-     * if {@code ignoreNotFound} is set to {@code true}.
-     * This method does not swallow a {@link NotFoundException} of a {@link #getCachedVersion()} call.
+     * {@code false} if an article with the specified ID was not found (depends on the {@code notFoundPolicy}).
      * <p>This method does auto-detection of the proper endpoint method
      * based on the result of {@link #getCachedVersion()}.
+     * The {@code notFoundPolicy} is not used for the {@link #getCachedVersion()} call.
      *
      * @param articleID      the ID of the article to delete
-     * @param ignoreNotFound flag indicating whether to ignore a possible {@link NotFoundException} during deletion
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
      * @return {@code true} if the article was deleted successfully,
-     * {@code false} if the server responded with "not found",
-     * but it was ignored because of the {@code ignoreNotFound} flag
+     * {@code false} otherwise (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the article with the specified ID was not found
-     *                                       and {@code ignoreNotFound} was not set to {@code true}.
-     *                                       See {@link WallabagService} description for additional details
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public boolean deleteArticle(int articleID, boolean ignoreNotFound)
+    public boolean deleteArticle(int articleID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
         boolean deleteArticleWithIdSupported = CompatibilityHelper
                 .isDeleteArticleWithIdSupported(this);
-        try {
+        return notFoundPolicy.call(() -> {
             if (deleteArticleWithIdSupported) {
                 deleteArticleWithId(articleID);
             } else {
                 deleteArticleWithObject(articleID);
             }
             return true;
-        } catch (NotFoundException nfe) {
-            if (ignoreNotFound) {
-                LOG.info("deleteArticle() ignoring NFE while deleting article with id: " + articleID, nfe);
-            } else {
-                throw nfe;
-            }
-        }
-        return false;
+        }, false, this);
     }
 
     /**
@@ -710,17 +717,39 @@ public class WallabagService {
     }
 
     /**
-     * Retrieves an article with the specified ID from the server.
-     * The returned object contains all of its {@link Tag}s and {@link Annotation}s.
+     * Retrieves an article with the specified ID from the server,
+     * returns an {@link Article} object or {@code null} if an article with the specified ID was not found.
+     * <p>The returned object contains all of its {@link Tag}s and {@link Annotation}s.
+     * <p>This method is an alias for {@link #getArticle(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to request
-     * @return an {@link Article} object for the specified URL
+     * @return an {@link Article} object for the specified ID
+     * or {@code null} if an article with the specified ID was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Article getArticle(int articleID) throws IOException, UnsuccessfulResponseException {
+        return getArticle(articleID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Retrieves an article with the specified ID from the server,
+     * returns an {@link Article} object or {@code null} if an article with the specified ID was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>The returned object contains all of its {@link Tag}s and {@link Annotation}s.
+     *
+     * @param articleID      the ID of the article to request
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Article} object for the specified ID
+     * or {@code null} if an article with the specified ID was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Article getArticle(int articleID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(getArticleCall(articleID).execute());
+    public Article getArticle(int articleID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(getArticleCall(articleID).execute()), this);
     }
 
     /**
@@ -739,33 +768,76 @@ public class WallabagService {
 
     /**
      * See {@link #exportArticle(int, ResponseFormat)}.
+     * <p>This method is an alias for {@link #exportArticleRaw(int, ResponseFormat, NotFoundPolicy)}
+     * with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID ID
      * @param format    response format
      * @return a {@link Response} typed with {@link ResponseBody}
+     * or {@code null} if an article with the specified ID was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-     * @throws NotFoundException             if the article with the specified ID was not found
      */
     public Response<ResponseBody> exportArticleRaw(int articleID, ResponseFormat format)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponse(exportArticleCall(articleID, format).execute());
+        return exportArticleRaw(articleID, format, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * See {@link #exportArticle(int, ResponseFormat)}.
+     *
+     * @param articleID      ID
+     * @param format         response format
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return a {@link Response} typed with {@link ResponseBody}
+     * or {@code null} if an article with the specified ID was not found (depends on the {@code notFoundPolicy})
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
+     */
+    public Response<ResponseBody> exportArticleRaw(int articleID, ResponseFormat format, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponse(exportArticleCall(articleID, format).execute()), this);
     }
 
     /**
      * Returns a {@link ResponseBody} containing an article specified by {@code articleID}
-     * in the specified {@code format}.
+     * in the specified {@code format} or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>This method is an alias for {@link #exportArticle(int, ResponseFormat, NotFoundPolicy)}
+     * with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to export
      * @param format    the desired response format
      * @return a {@link ResponseBody} containing the article
+     * or {@code null} if an article with the specified ID was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-     * @throws NotFoundException             if the article with the specified ID was not found
      */
     public ResponseBody exportArticle(int articleID, ResponseFormat format)
             throws IOException, UnsuccessfulResponseException {
-        return exportArticleRaw(articleID, format).body();
+        return exportArticle(articleID, format, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Returns a {@link ResponseBody} containing an article specified by {@code articleID}
+     * in the specified {@code format} or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy}).
+     *
+     * @param articleID      the ID of the article to export
+     * @param format         the desired response format
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return a {@link ResponseBody} containing the article
+     * or {@code null} if the article was not found (depends on the {@code notFoundPolicy})
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
+     */
+    public ResponseBody exportArticle(int articleID, ResponseFormat format, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> exportArticleRaw(articleID, format).body(), this);
     }
 
     Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {
@@ -788,16 +860,37 @@ public class WallabagService {
     }
 
     /**
-     * Returns a {@code List} of {@link Tag}s for the article specified with the {@code articleID}.
+     * Returns a {@code List} of {@link Tag}s for the article specified with the {@code articleID}
+     * or {@code null} if an article with the specified ID was not found.
+     * <p>This method is an alias for {@link #getTags(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to retrieve tags for
      * @return a {@code List} of {@link Tag}s for the specified article
+     * or {@code null} if an article with the specified ID was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public List<Tag> getTags(int articleID) throws IOException, UnsuccessfulResponseException {
+        return getTags(articleID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Returns a {@code List} of {@link Tag}s for the article specified with the {@code articleID}
+     * or {@code null} if an article with the specified ID was not found
+     * (depends on the {@code notFoundPolicy}).
+     *
+     * @param articleID      the ID of the article to retrieve tags for
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return a {@code List} of {@link Tag}s for the specified article
+     * or {@code null} if an article with the specified ID was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public List<Tag> getTags(int articleID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(getTagsCall(articleID).execute());
+    public List<Tag> getTags(int articleID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(getTagsCall(articleID).execute()), this);
     }
 
     /**
@@ -816,18 +909,42 @@ public class WallabagService {
 
     /**
      * Sends the specified tags (as {@code String}s) to be added to the specified article on the server,
-     * returns the {@link Article} with the tags added.
-     * Adding already present tags do not create duplicates.
+     * returns the {@link Article} with the tags added
+     * or {@code null} if an article with the specified ID was not found.
+     * <p>Adding already present tags do not create duplicates.
+     * <p>This method is an alias for {@link #addTags(int, Collection, NotFoundPolicy)}
+     * with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to add tags to
      * @param tags      a collection of {@code String} tags to add
      * @return an {@link Article} after the tags were added
+     * or {@code null} if an article with the specified ID was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Article addTags(int articleID, Collection<String> tags) throws IOException, UnsuccessfulResponseException {
+        return addTags(articleID, tags, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Sends the specified tags (as {@code String}s) to be added to the specified article on the server,
+     * returns the {@link Article} with the tags added or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>Adding already present tags do not create duplicates.
+     *
+     * @param articleID      the ID of the article to add tags to
+     * @param tags           a collection of {@code String} tags to add
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Article} after the tags were added
+     * or {@code null} if an article with the specified ID was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Article addTags(int articleID, Collection<String> tags) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(addTagsCall(articleID, tags).execute());
+    public Article addTags(int articleID, Collection<String> tags, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(addTagsCall(articleID, tags).execute()), this);
     }
 
     /**
@@ -846,19 +963,39 @@ public class WallabagService {
 
     /**
      * Deletes the specified by {@code tagID} tag from the specified by {@code articleID} article,
-     * returns the {@link Article} after operation.
+     * returns the {@link Article} after operation or {@code null} if the article or the tag was not found.
+     * <p>This method is an alias for {@link #deleteTag(int, int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to delete tag from
      * @param tagID     the ID of the tag to delete
-     * @return an {@link Article} after the tag were deleted
+     * @return an {@link Article} after the tag was deleted
+     * or {@code null} if the article or the tas was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Article deleteTag(int articleID, int tagID) throws IOException, UnsuccessfulResponseException {
+        return deleteTag(articleID, tagID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Deletes the specified by {@code tagID} tag from the specified by {@code articleID} article,
+     * returns the {@link Article} after operation or {@code null} if the article or the tag was not found
+     * (depends on the {@code notFoundPolicy}).
+     *
+     * @param articleID      the ID of the article to delete tag from
+     * @param tagID          the ID of the tag to delete
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Article} after the tag was deleted
+     * or {@code null} if the article or the tag was not found (depends on the {@code notFoundPolicy}).
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if either the article or the tag with the specified ID was not found.
      *                                       The exception is not thrown if the tag exists, but the article doesn't have it.
-     *                                       See {@link WallabagService} description for additional details
+     *                                       Depends on the {@code notFoundPolicy}.
      */
-    public Article deleteTag(int articleID, int tagID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteTagCall(articleID, tagID).execute());
+    public Article deleteTag(int articleID, int tagID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(deleteTagCall(articleID, tagID).execute()), this);
     }
 
     /**
@@ -892,17 +1029,38 @@ public class WallabagService {
     }
 
     /**
-     * Deletes the specified by {@code tagLabel} tag from all articles on the server (for current user).
-     * The value of {@link Tag#id} of the returned object may be 0.
+     * Deletes the specified by {@code tagLabel} tag from all articles on the server (for current user),
+     * returns the deleted {@link Tag} or {@code null} if the tag was not found.
+     * <p>The value of {@link Tag#id} of the returned object may be 0.
+     * <p>This method is an alias for {@link #deleteTag(String, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param tagLabel the label of the tag to delete
+     * @return the deleted {@link Tag} or {@code null} if the tag was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Tag deleteTag(String tagLabel) throws IOException, UnsuccessfulResponseException {
+        return deleteTag(tagLabel, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Deletes the specified by {@code tagLabel} tag from all articles on the server (for current user),
+     * returns the deleted {@link Tag} or {@code null} if the tag was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>The value of {@link Tag#id} of the returned object may be 0.
+     *
+     * @param tagLabel       the label of the tag to delete
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
      * @return the deleted {@link Tag}
+     * or {@code null} if the tag was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if a tag with the specified {@code tagLabel} was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Tag deleteTag(String tagLabel) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteTagCall(tagLabel).execute());
+    public Tag deleteTag(String tagLabel, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(deleteTagCall(tagLabel).execute()), this);
     }
 
     /**
@@ -916,17 +1074,38 @@ public class WallabagService {
     }
 
     /**
-     * Deletes the specified by {@code tagID} tag from all articles on the server (for current user).
-     * The value of {@link Tag#id} of the returned object may be 0.
+     * Deletes the specified by {@code tagID} tag from all articles on the server (for current user),
+     * returns the deleted {@link Tag} or {@code null} if the tag was not found.
+     * <p>The value of {@link Tag#id} of the returned object may be 0.
+     * <p>This method is an alias for {@link #deleteTag(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param tagID the ID of the tag to delete
+     * @return the deleted {@link Tag} or {@code null} if the tag was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Tag deleteTag(int tagID) throws IOException, UnsuccessfulResponseException {
+        return deleteTag(tagID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Deletes the specified by {@code tagID} tag from all articles on the server (for current user),
+     * returns the deleted {@link Tag} or {@code null} if the tag was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>The value of {@link Tag#id} of the returned object may be 0.
+     *
+     * @param tagID          the ID of the tag to delete
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
      * @return the deleted {@link Tag}
+     * or {@code null} if the tag was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the tag with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Tag deleteTag(int tagID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteTagCall(tagID).execute());
+    public Tag deleteTag(int tagID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(deleteTagCall(tagID).execute()), this);
     }
 
     /**
@@ -942,17 +1121,38 @@ public class WallabagService {
     /**
      * Deletes the tags specified by labels from all articles on the server (for current user),
      * returns a list of deleted {@link Tag}s. Not found tags are ignored,
-     * unless all of the specified tags are not found - a {@link NotFoundException} is thrown in this case.
-     * The value of {@link Tag#id} of the returned objects may be 0.
+     * unless all of the specified tags are not found, in which case a {@code null} is returned.
+     * <p>The value of {@link Tag#id} of the returned objects may be 0.
+     * <p>This method is an alias for {@link #deleteTags(Collection, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param tags a collection of {@code String} labels of tags to delete
+     * @return a {@code List} of deleted {@link Tag}s or {@code null} if none of the tags were found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public List<Tag> deleteTags(Collection<String> tags) throws IOException, UnsuccessfulResponseException {
+        return deleteTags(tags, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Deletes the tags specified by labels from all articles on the server (for current user),
+     * returns a list of deleted {@link Tag}s. Not found tags are ignored,
+     * unless all of the specified tags are not found, in which case a {@code null} is returned
+     * (depends on the {@code notFoundPolicy}).
+     * <p>The value of {@link Tag#id} of the returned objects may be 0.
+     *
+     * @param tags           a collection of {@code String} labels of tags to delete
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
      * @return a {@code List} of deleted {@link Tag}s
+     * or {@code null} if none of the tags were found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if none of the specified tags were found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public List<Tag> deleteTags(Collection<String> tags) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteTagsCall(tags).execute());
+    public List<Tag> deleteTags(Collection<String> tags, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(deleteTagsCall(tags).execute()), this);
     }
 
     /**
@@ -966,16 +1166,36 @@ public class WallabagService {
     }
 
     /**
-     * Retrieves and returns an {@link Annotations} object for the article specified by {@code articleID}.
+     * Retrieves and returns an {@link Annotations} object for the article specified by {@code articleID}
+     * or {@code null} if the article was not found.
+     * <p>This method is an alias for {@link #getAnnotations(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to retrieve annotations for
      * @return an {@link Annotations} object for the specified article
+     * or {@code null} if the article was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Annotations getAnnotations(int articleID) throws IOException, UnsuccessfulResponseException {
+        return getAnnotations(articleID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Retrieves and returns an {@link Annotations} object for the article specified by {@code articleID}
+     * or {@code null} if the article was not found (depends on the {@code notFoundPolicy}).
+     *
+     * @param articleID      the ID of the article to retrieve annotations for
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Annotations} object for the specified article
+     * or {@code null} if the article was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Annotations getAnnotations(int articleID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(getAnnotationsCall(articleID).execute());
+    public Annotations getAnnotations(int articleID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(getAnnotationsCall(articleID).execute()), this);
     }
 
     /**
@@ -1003,21 +1223,47 @@ public class WallabagService {
 
     /**
      * Adds an annotation with the provided parameters to the specified by {@code articleID} article,
-     * returns the resulting {@link Annotation} object.
+     * returns the resulting {@link Annotation} object or {@code null} if the article was not found.
      * <p>See {@link Annotation} for annotation format description.
+     * <p>This method is an alias for {@link #addAnnotation(int, List, String, String, NotFoundPolicy)}
+     * with {@link NotFoundPolicy#SMART}.
      *
      * @param articleID the ID of the article to add annotation to
      * @param ranges    annotation ranges
      * @param text      annotation text
      * @param quote     {@code null}able quote text
-     * @return an {@link Annotation} object
+     * @return an {@link Annotation} object or {@code null} if the article was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-     * @throws NotFoundException             if the article with the specified ID was not found
      */
     public Annotation addAnnotation(int articleID, List<Annotation.Range> ranges, String text, String quote)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(addAnnotationCall(articleID, ranges, text, quote).execute());
+        return addAnnotation(articleID, ranges, text, quote, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Adds an annotation with the provided parameters to the specified by {@code articleID} article,
+     * returns the resulting {@link Annotation} object or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>See {@link Annotation} for annotation format description.
+     *
+     * @param articleID      the ID of the article to add annotation to
+     * @param ranges         annotation ranges
+     * @param text           annotation text
+     * @param quote          {@code null}able quote text
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Annotation} object or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy})
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if the article with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
+     */
+    public Annotation addAnnotation(int articleID, List<Annotation.Range> ranges, String text, String quote,
+                                    NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(addAnnotationCall(articleID, ranges, text, quote).execute()),
+                this);
     }
 
     /**
@@ -1039,18 +1285,39 @@ public class WallabagService {
 
     /**
      * Updates the text of the specified by {@code annotationID} annotation,
-     * returns the resulting {@link Annotation} object.
+     * returns the resulting {@link Annotation} object or {@code null} if the annotation was not found.
+     * <p>This method is an alias for {@link #updateAnnotation(int, String, NotFoundPolicy)}
+     * with {@link NotFoundPolicy#SMART}.
      *
      * @param annotationID the ID of the annotation to update
      * @param text         the new text
-     * @return an updated {@link Annotation} object
+     * @return an updated {@link Annotation} object or {@code null} if the annotation was not found
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
-     * @throws NotFoundException             if the annotation with the specified ID was not found
      */
     public Annotation updateAnnotation(int annotationID, String text)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(updateAnnotationCall(annotationID, text).execute());
+        return updateAnnotation(annotationID, text, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Updates the text of the specified by {@code annotationID} annotation,
+     * returns the resulting {@link Annotation} object or {@code null} if the annotation was not found
+     * (depends on the {@code notFoundPolicy}).
+     *
+     * @param annotationID   the ID of the annotation to update
+     * @param text           the new text
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an updated {@link Annotation} object or {@code null} if the annotation was not found
+     * (depends on the {@code notFoundPolicy})
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if the annotation with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
+     */
+    public Annotation updateAnnotation(int annotationID, String text, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(updateAnnotationCall(annotationID, text).execute()), this);
     }
 
     /**
@@ -1065,17 +1332,38 @@ public class WallabagService {
 
     /**
      * Deletes the specified by {@code annotationID} annotation,
-     * returns the deleted {@link Annotation} object.
-     * The value of {@link Annotation#id} of the returned object may be 0.
+     * returns the deleted {@link Annotation} object or {@code null} if the annotation was not found.
+     * <p>The value of {@link Annotation#id} of the returned object may be 0.
+     * <p>This method is an alias for {@link #deleteAnnotation(int, NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
      * @param annotationID the ID of the annotation to delete
      * @return an {@link Annotation} object corresponding to the deleted annotation
+     * or {@code null} if the annotation was not found
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public Annotation deleteAnnotation(int annotationID) throws IOException, UnsuccessfulResponseException {
+        return deleteAnnotation(annotationID, NotFoundPolicy.SMART);
+    }
+
+    /**
+     * Deletes the specified by {@code annotationID} annotation,
+     * returns the deleted {@link Annotation} object or {@code null} if the article was not found
+     * (depends on the {@code notFoundPolicy}).
+     * <p>The value of {@link Annotation#id} of the returned object may be 0.
+     *
+     * @param annotationID   the ID of the annotation to delete
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return an {@link Annotation} object corresponding to the deleted annotation
+     * or {@code null} if the annotation was not found (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      * @throws NotFoundException             if the annotation with the specified ID was not found
+     *                                       (depends on the {@code notFoundPolicy})
      */
-    public Annotation deleteAnnotation(int annotationID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteAnnotationCall(annotationID).execute());
+    public Annotation deleteAnnotation(int annotationID, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(deleteAnnotationCall(annotationID).execute()), this);
     }
 
     /**
@@ -1088,38 +1376,30 @@ public class WallabagService {
     }
 
     /**
-     * Returns the wallabag instance info as {@link Info}.
-     * This method returns {@code null} if server responds with {@code HTTP 404 Not Found}.
-     * See {@link #getInfo(boolean)}.
+     * Returns the wallabag instance info as {@link Info} or {@code null} if the API method is not available.
+     * <p>This method is an alias for {@link #getInfo(NotFoundPolicy)} with {@link NotFoundPolicy#SMART}.
      *
-     * @return the wallabag instance info as {@link Info}
+     * @return the wallabag instance info as {@link Info} or {@code null} if the API method is not available
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Info getInfo() throws IOException, UnsuccessfulResponseException {
-        return getInfo(true);
+        return getInfo(NotFoundPolicy.SMART);
     }
 
     /**
-     * Returns the wallabag instance info as {@link Info}.
+     * Returns the wallabag instance info as {@link Info} or {@code null} if the API method is not available
+     * (depends on the {@code notFoundPolicy}).
      *
-     * @param nullIfNotFound flag indicating whether to return {@code null}
-     *                       instead of throwing {@link NotFoundException}
-     * @return the wallabag instance info as {@link Info}
+     * @param notFoundPolicy the {@link NotFoundPolicy} to use
+     * @return the wallabag instance info as {@link Info} or {@code null} if the API method is not available
+     * (depends on the {@code notFoundPolicy})
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     * @throws NotFoundException             if the API method is not available (depends on the {@code notFoundPolicy})
      */
-    public Info getInfo(boolean nullIfNotFound) throws IOException, UnsuccessfulResponseException {
-        try {
-            return checkResponseBody(getInfoCall().execute());
-        } catch (NotFoundException nfe) {
-            if (!nullIfNotFound) {
-                throw nfe;
-            }
-            LOG.info("getInfo() returning null instead of throwing NotFoundException");
-            LOG.debug("getInfo()", nfe);
-        }
-        return null;
+    public Info getInfo(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> checkResponseBody(getInfoCall().execute()), this);
     }
 
     /**
@@ -1166,6 +1446,28 @@ public class WallabagService {
      */
     public void resetCachedVersion() {
         serverVersion = null;
+    }
+
+    /**
+     * This method runs a test query against the server and finishes gracefully
+     * if the test completes without errors, otherwise throws an exception.
+     * This method can be used to test authentication or general API availability.
+     * <p>This method is used by the {@link NotFoundPolicy#SMART} policy.
+     *
+     * @throws IOException                   in case of network errors
+     * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
+     */
+    public void testServerAccessibility() throws IOException, UnsuccessfulResponseException {
+        // just execute some call that should not result in NFE
+        articleExistsByUrl("wallabag-apiwrapper-test.example.com");
+/*
+        // slower (?) alternative
+        getArticlesBuilder()
+                .perPage(1)
+                .since(System.currentTimeMillis() + 31536000000L) // ~ a year in the future
+                .detailLevel(ArticlesQueryBuilder.DetailLevel.METADATA)
+                .execute();
+*/
     }
 
     private <T> T checkResponseBody(Response<T> response) throws IOException, UnsuccessfulResponseException {
