@@ -201,7 +201,7 @@ public class WallabagService {
     }
 
     Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(getArticlesCall(parameters).execute());
+        return execAndCheckBody(getArticlesCall(parameters));
     }
 
     Call<Articles> searchCall(Map<String, String> parameters) {
@@ -209,7 +209,7 @@ public class WallabagService {
     }
 
     Articles search(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(searchCall(parameters).execute());
+        return execAndCheckBody(searchCall(parameters));
     }
 
     Call<Article> addArticleCall(RequestBody requestBody) {
@@ -217,7 +217,7 @@ public class WallabagService {
     }
 
     Article addArticle(RequestBody requestBody) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(addArticleCall(requestBody).execute());
+        return execAndCheckBody(addArticleCall(requestBody));
     }
 
     /**
@@ -309,7 +309,7 @@ public class WallabagService {
             call = wallabagApiService.exists(url, null);
         }
 
-        return checkResponseBody(call.execute()).exists;
+        return execAndCheckBody(call).exists;
     }
 
     /**
@@ -335,7 +335,7 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public boolean articleExistsByUrl(String url) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articleExistsByUrlCall(url).execute()).exists;
+        return execAndCheckBody(articleExistsByUrlCall(url)).exists;
     }
 
     /**
@@ -361,7 +361,7 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public boolean articleExistsByHash(String urlHash) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articleExistsByHashCall(urlHash).execute()).exists;
+        return execAndCheckBody(articleExistsByHashCall(urlHash)).exists;
     }
 
     /**
@@ -402,7 +402,7 @@ public class WallabagService {
             call = wallabagApiService.existsWithId(url, null, "1");
         }
 
-        return checkResponseBody(call.execute()).id;
+        return execAndCheckBody(call).id;
     }
 
     /**
@@ -428,7 +428,7 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Integer articleExistsByUrlWithId(String url) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articleExistsByUrlWithIdCall(url).execute()).id;
+        return execAndCheckBody(articleExistsByUrlWithIdCall(url)).id;
     }
 
     /**
@@ -454,7 +454,7 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public Integer articleExistsByHashWithId(String urlHash) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articleExistsByHashWithIdCall(urlHash).execute()).id;
+        return execAndCheckBody(articleExistsByHashWithIdCall(urlHash)).id;
     }
 
     /**
@@ -485,7 +485,7 @@ public class WallabagService {
      */
     public Map<String, Boolean> articlesExistByUrls(Collection<String> urls)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articlesExistByUrlsCall(urls).execute());
+        return execAndCheckBody(articlesExistByUrlsCall(urls));
     }
 
     /**
@@ -516,7 +516,7 @@ public class WallabagService {
      */
     public Map<String, Boolean> articlesExistByHashes(Collection<String> urlHashes)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articlesExistByHashesCall(urlHashes).execute());
+        return execAndCheckBody(articlesExistByHashesCall(urlHashes));
     }
 
     /**
@@ -547,7 +547,7 @@ public class WallabagService {
      */
     public Map<String, Integer> articlesExistByUrlsWithId(Collection<String> urls)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articlesExistByUrlsWithIdCall(urls).execute());
+        return execAndCheckBody(articlesExistByUrlsWithIdCall(urls));
     }
 
     /**
@@ -578,7 +578,7 @@ public class WallabagService {
      */
     public Map<String, Integer> articlesExistByHashesWithId(Collection<String> urlHashes)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(articlesExistByHashesWithIdCall(urlHashes).execute());
+        return execAndCheckBody(articlesExistByHashesWithIdCall(urlHashes));
     }
 
     /**
@@ -678,7 +678,7 @@ public class WallabagService {
      *                                       See {@link WallabagService} description for additional details
      */
     public Article deleteArticleWithObject(int articleID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteArticleWithObjectCall(articleID).execute());
+        return execAndCheckBody(deleteArticleWithObjectCall(articleID));
     }
 
     /**
@@ -703,7 +703,7 @@ public class WallabagService {
      *                                       See {@link WallabagService} description for additional details
      */
     public Integer deleteArticleWithId(int articleID) throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(deleteArticleWithIdCall(articleID).execute()).id;
+        return execAndCheckBody(deleteArticleWithIdCall(articleID)).id;
     }
 
     /**
@@ -749,7 +749,7 @@ public class WallabagService {
      */
     public Article getArticle(int articleID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(getArticleCall(articleID).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(getArticleCall(articleID)), this);
     }
 
     /**
@@ -846,7 +846,7 @@ public class WallabagService {
 
     Article modifyArticle(int articleID, RequestBody requestBody)
             throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(modifyArticleCall(articleID, requestBody).execute());
+        return execAndCheckBody(modifyArticleCall(articleID, requestBody));
     }
 
     /**
@@ -890,7 +890,7 @@ public class WallabagService {
      */
     public List<Tag> getTags(int articleID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(getTagsCall(articleID).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(getTagsCall(articleID)), this);
     }
 
     /**
@@ -944,7 +944,7 @@ public class WallabagService {
      */
     public Article addTags(int articleID, Collection<String> tags, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(addTagsCall(articleID, tags).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(addTagsCall(articleID, tags)), this);
     }
 
     /**
@@ -995,7 +995,7 @@ public class WallabagService {
      */
     public Article deleteTag(int articleID, int tagID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(deleteTagCall(articleID, tagID).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagCall(articleID, tagID)), this);
     }
 
     /**
@@ -1015,7 +1015,7 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public List<Tag> getTags() throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(getTagsCall().execute());
+        return execAndCheckBody(getTagsCall());
     }
 
     /**
@@ -1060,7 +1060,7 @@ public class WallabagService {
      */
     public Tag deleteTag(String tagLabel, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(deleteTagCall(tagLabel).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagCall(tagLabel)), this);
     }
 
     /**
@@ -1105,7 +1105,7 @@ public class WallabagService {
      */
     public Tag deleteTag(int tagID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(deleteTagCall(tagID).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagCall(tagID)), this);
     }
 
     /**
@@ -1152,7 +1152,7 @@ public class WallabagService {
      */
     public List<Tag> deleteTags(Collection<String> tags, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(deleteTagsCall(tags).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagsCall(tags)), this);
     }
 
     /**
@@ -1195,7 +1195,7 @@ public class WallabagService {
      */
     public Annotations getAnnotations(int articleID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(getAnnotationsCall(articleID).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(getAnnotationsCall(articleID)), this);
     }
 
     /**
@@ -1262,8 +1262,7 @@ public class WallabagService {
     public Annotation addAnnotation(int articleID, List<Annotation.Range> ranges, String text, String quote,
                                     NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(addAnnotationCall(articleID, ranges, text, quote).execute()),
-                this);
+        return notFoundPolicy.call(() -> execAndCheckBody(addAnnotationCall(articleID, ranges, text, quote)), this);
     }
 
     /**
@@ -1317,7 +1316,7 @@ public class WallabagService {
      */
     public Annotation updateAnnotation(int annotationID, String text, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(updateAnnotationCall(annotationID, text).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(updateAnnotationCall(annotationID, text)), this);
     }
 
     /**
@@ -1363,7 +1362,7 @@ public class WallabagService {
      */
     public Annotation deleteAnnotation(int annotationID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(deleteAnnotationCall(annotationID).execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteAnnotationCall(annotationID)), this);
     }
 
     /**
@@ -1399,7 +1398,7 @@ public class WallabagService {
      * @throws NotFoundException             if the API method is not available (depends on the {@code notFoundPolicy})
      */
     public Info getInfo(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponseBody(getInfoCall().execute()), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(getInfoCall()), this);
     }
 
     /**
@@ -1420,7 +1419,7 @@ public class WallabagService {
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public String getVersion() throws IOException, UnsuccessfulResponseException {
-        return checkResponseBody(getVersionCall().execute());
+        return execAndCheckBody(getVersionCall());
     }
 
     /**
@@ -1468,6 +1467,10 @@ public class WallabagService {
                 .detailLevel(ArticlesQueryBuilder.DetailLevel.METADATA)
                 .execute();
 */
+    }
+
+    private <T> T execAndCheckBody(Call<T> call) throws IOException, UnsuccessfulResponseException {
+        return checkResponseBody(call.execute());
     }
 
     private <T> T checkResponseBody(Response<T> response) throws IOException, UnsuccessfulResponseException {
