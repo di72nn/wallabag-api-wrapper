@@ -839,7 +839,7 @@ public class WallabagService {
      */
     public ResponseBody exportArticle(int articleID, ResponseFormat format, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> exportArticleRaw(articleID, format).body(), this,
+        return notFoundPolicy.call(() -> execAndCheckBody(exportArticleCall(articleID, format)), this,
                 CompatibilityHelper::isExportArticleSupported, null);
     }
 
