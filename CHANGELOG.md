@@ -1,5 +1,26 @@
 # Change Log
 
+## Version 1.0.0-rc.4
+
+*2019.12.08*
+
+ * New 2.4.0 features:
+   * `exists` by URL hash.
+   * New `Article` fields: `givenUrl`, `hashedGivenUrl`, `archivedAt`.
+   * New `ArticlesQueryBuilder.SortCriterion`: `ARCHIVED`.
+   * `ArticlesQueryBuilder.DetailLevel` allows load articles without content.
+   * New method `WallabagService.getInfo()`.
+   * New search endpoint support (available through `WallabagService.searchArticlesBuilder()`).
+ * `WallabagService.delete(int)` is improved.
+
+**Breaking changes:**
+
+ * `BatchExistQueryBuilder.addUrl(String)` throws `IllegalArgumentException` if the `url` is empty.
+ * `WallabagService.deleteArticle(int)` renamed to `WallabagService.deleteArticleWithObject(int)`,
+ `WallabagService.deleteArticleCall(int)` renamed to `WallabagService.deleteArticleWithObjectCall(int)`;
+ an improved `WallabagService.deleteArticle(int)` is introduced instead (with different return type).
+
+
 ## Version 1.0.0-rc.3
 
 *2019.11.30*

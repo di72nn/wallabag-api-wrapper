@@ -2,7 +2,7 @@
 
 A simple Java library for accessing the [wallabag API](https://doc.wallabag.org/en/developer/api/readme.html).
 
-Supported wallabag versions are `2.1.3`-`2.3.8`.
+Supported wallabag versions are `2.1.3`-`2.4.0`.
 Earlier versions should still work with some features lacking.
 Newer versions should work, but were not tested against.
 Minimal required Java version is 7.
@@ -24,7 +24,7 @@ Add the Jitpack repo to your root build.gradle at the end of repositories:
 Add the dependency:
 ```groovy
     dependencies {
-        implementation 'com.github.di72nn.wallabag-api-wrapper:api-wrapper:v1.0.0-rc.3'
+        implementation 'com.github.di72nn.wallabag-api-wrapper:api-wrapper:v1.0.0-rc.4'
     }
 ```
 
