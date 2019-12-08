@@ -75,23 +75,19 @@ public class ArticlesPageIterator {
         if (articles != null) return true;
         if (lastPageReached) return false;
 
-        try {
-            articles = queryBuilder.page(currentPage++).execute(NotFoundPolicy.THROW);
-        } catch (NotFoundException nfe) {
-            notFoundPolicy.handle(nfe, queryBuilder.getWallabagService(), queryBuilder.getAvailabilityChecker());
-
-            LOG.info("Handling NFE as empty");
-            LOG.debug("NFE", nfe);
-            lastPageReached = true;
-        }
+        articles = queryBuilder.page(currentPage)
+                .execute(notFoundPolicy);
 
         if (articles != null) {
-            LOG.trace("Page: {}/{}, total articles: {}", articles.page, articles.pages, articles.total);
+            LOG.debug("Page: {}/{}, total articles: {}", articles.page, articles.pages, articles.total);
 
             if (articles.page == articles.pages) lastPageReached = true;
         } else {
-            LOG.trace("articles == null");
+            LOG.info("articles == null, ending iteration");
+            lastPageReached = true;
         }
+
+        if (!lastPageReached) currentPage++;
 
         return articles != null;
     }

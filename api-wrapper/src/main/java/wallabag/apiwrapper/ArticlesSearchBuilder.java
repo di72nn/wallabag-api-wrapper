@@ -77,9 +77,4 @@ public class ArticlesSearchBuilder extends GenericPaginatingQueryBuilder<Article
         return new ArticlesSearchBuilder(wallabagService);
     }
 
-    @Override
-    protected NotFoundPolicy.AvailabilityChecker getAvailabilityChecker() {
-        return CompatibilityHelper::isSearchSupported;
-    }
-
 }

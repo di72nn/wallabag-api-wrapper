@@ -303,9 +303,4 @@ public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<Articles
         return new ArticlesQueryBuilder(wallabagService);
     }
 
-    @Override
-    protected NotFoundPolicy.AvailabilityChecker getAvailabilityChecker() {
-        return null;
-    }
-
 }

@@ -26,10 +26,6 @@ abstract class GenericPaginatingQueryBuilder<T extends GenericPaginatingQueryBui
 
     protected abstract T self();
 
-    WallabagService getWallabagService() {
-        return wallabagService;
-    }
-
     int getPage() {
         return page;
     }
@@ -175,7 +171,5 @@ abstract class GenericPaginatingQueryBuilder<T extends GenericPaginatingQueryBui
      *                                       (depends on the {@code notFoundPolicy})
      */
     public abstract Articles execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException;
-
-    protected abstract NotFoundPolicy.AvailabilityChecker getAvailabilityChecker();
 
 }
