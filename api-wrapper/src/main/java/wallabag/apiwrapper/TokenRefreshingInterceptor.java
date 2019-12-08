@@ -63,9 +63,6 @@ class TokenRefreshingInterceptor implements Interceptor {
             LOG.info("intercept() unsuccessful response; code: " + response.code());
 
             if (response.code() == 401) {
-                ResponseBody body = response.body();
-                LOG.debug("intercept() response body: " + (body != null ? body.string() : null));
-
                 synchronized (tokenUpdateLock) {
                     boolean successfullyUpdatedToken = false;
                     try {
@@ -75,14 +72,14 @@ class TokenRefreshingInterceptor implements Interceptor {
                     } catch (GetTokenException e) {
                         LOG.debug("intercept() got GetTokenException");
 
-                        response.close();
+                        inspectAndCloseResponse(response);
 
                         Response<TokenResponse> tokenResponse = e.getResponse();
                         response = tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
                     }
 
                     if (successfullyUpdatedToken) {
-                        response.close();
+                        inspectAndCloseResponse(response);
 
                         // retry the original request
                         request = setHeaders(originalRequest.newBuilder()).build();
@@ -93,6 +90,19 @@ class TokenRefreshingInterceptor implements Interceptor {
         }
 
         return response;
+    }
+
+    private void inspectAndCloseResponse(okhttp3.Response response) {
+        LOG.debug("inspectAndCloseResponse() started");
+
+        ResponseBody body = response.body();
+        if (body != null) {
+            try {
+                LOG.debug("inspectAndCloseResponse() response body: " + body.string());
+            } catch (IOException ignored) {}
+        } else {
+            LOG.debug("inspectAndCloseResponse() the body is null, nothing to do");
+        }
     }
 
     private Request.Builder setHeaders(Request.Builder requestBuilder) {
