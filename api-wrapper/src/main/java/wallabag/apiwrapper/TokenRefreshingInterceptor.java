@@ -1,13 +1,13 @@
 package wallabag.apiwrapper;
 
-import wallabag.apiwrapper.models.TokenResponse;
-import wallabag.apiwrapper.services.WallabagAuthService;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.moshi.MoshiConverterFactory;
+import wallabag.apiwrapper.models.TokenResponse;
+import wallabag.apiwrapper.services.WallabagAuthService;
 
 import java.io.IOException;
 

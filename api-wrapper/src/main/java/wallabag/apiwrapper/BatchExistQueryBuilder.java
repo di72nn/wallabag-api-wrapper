@@ -269,7 +269,7 @@ public class BatchExistQueryBuilder {
                 ? wallabagService.articlesExistByHashes(urlHashes)
                 : wallabagService.articlesExistByUrls(urls);
 
-        if (usingHashedUrls) map = remap(map, new HashMap<String, Boolean>(), Boolean.FALSE);
+        if (usingHashedUrls) map = remap(map, new HashMap<>(), Boolean.FALSE);
 
         return map;
     }
@@ -288,7 +288,7 @@ public class BatchExistQueryBuilder {
                 ? wallabagService.articlesExistByHashesWithId(urlHashes)
                 : wallabagService.articlesExistByUrlsWithId(urls);
 
-        if (usingHashedUrls) map = remap(map, new HashMap<String, Integer>(), null);
+        if (usingHashedUrls) map = remap(map, new HashMap<>(), null);
 
         return map;
     }

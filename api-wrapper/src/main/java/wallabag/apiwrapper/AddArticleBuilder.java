@@ -1,10 +1,10 @@
 package wallabag.apiwrapper;
 
-import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
-import wallabag.apiwrapper.models.Article;
 import okhttp3.FormBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
+import wallabag.apiwrapper.exceptions.UnsuccessfulResponseException;
+import wallabag.apiwrapper.models.Article;
 
 import java.io.IOException;
 
