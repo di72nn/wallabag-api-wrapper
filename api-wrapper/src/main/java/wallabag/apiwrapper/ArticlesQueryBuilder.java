@@ -279,8 +279,7 @@ public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<Articles
      */
     @Override
     public Articles execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> wallabagService.getArticles(build()), wallabagService,
-                getAvailabilityChecker(), null);
+        return wallabagService.getArticles(build(), notFoundPolicy);
     }
 
     @Override
@@ -306,7 +305,7 @@ public class ArticlesQueryBuilder extends GenericPaginatingQueryBuilder<Articles
 
     @Override
     protected NotFoundPolicy.AvailabilityChecker getAvailabilityChecker() {
-        return CompatibilityHelper::isGetArticlesSupported;
+        return null;
     }
 
 }

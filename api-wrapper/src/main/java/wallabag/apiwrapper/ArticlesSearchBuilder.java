@@ -60,8 +60,7 @@ public class ArticlesSearchBuilder extends GenericPaginatingQueryBuilder<Article
      */
     @Override
     public Articles execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> wallabagService.search(build()), wallabagService,
-                getAvailabilityChecker(), null);
+        return wallabagService.search(build(), notFoundPolicy);
     }
 
     @Override

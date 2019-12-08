@@ -200,16 +200,19 @@ public class WallabagService {
         return wallabagApiService.getArticles(parameters);
     }
 
-    Articles getArticles(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
-        return execAndCheckBody(getArticlesCall(parameters));
+    Articles getArticles(Map<String, String> parameters, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> execAndCheckBody(getArticlesCall(parameters)), this);
     }
 
     Call<Articles> searchCall(Map<String, String> parameters) {
         return wallabagApiService.search(parameters);
     }
 
-    Articles search(Map<String, String> parameters) throws IOException, UnsuccessfulResponseException {
-        return execAndCheckBody(searchCall(parameters));
+    Articles search(Map<String, String> parameters, NotFoundPolicy notFoundPolicy)
+            throws IOException, UnsuccessfulResponseException {
+        return notFoundPolicy.call(() -> execAndCheckBody(searchCall(parameters)), this,
+                CompatibilityHelper::isSearchSupported, null);
     }
 
     Call<Article> addArticleCall(RequestBody requestBody) {
@@ -847,9 +850,9 @@ public class WallabagService {
         return wallabagApiService.modifyArticle(nonNegativeNumber(articleID, "articleID"), requestBody);
     }
 
-    Article modifyArticle(int articleID, RequestBody requestBody)
+    Article modifyArticle(int articleID, RequestBody requestBody, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return execAndCheckBody(modifyArticleCall(articleID, requestBody));
+        return notFoundPolicy.call(() -> execAndCheckBody(modifyArticleCall(articleID, requestBody)), this);
     }
 
     /**

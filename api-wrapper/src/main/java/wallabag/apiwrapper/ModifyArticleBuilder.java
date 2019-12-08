@@ -100,7 +100,7 @@ public class ModifyArticleBuilder extends AbstractArticleBuilder<ModifyArticleBu
      *                                       (depends on the {@code notFoundPolicy})
      */
     public Article execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> wallabagService.modifyArticle(id, build()), wallabagService);
+        return wallabagService.modifyArticle(id, build(), notFoundPolicy);
     }
 
 }
