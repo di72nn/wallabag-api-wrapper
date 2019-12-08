@@ -268,7 +268,8 @@ public class WallabagService {
             return null;
         }
 
-        return notFoundPolicy.call(() -> checkResponseBody(response), this);
+        return notFoundPolicy.call(() -> checkResponseBody(response), this,
+                CompatibilityHelper::isReloadArticleSupported, null);
     }
 
     /**
@@ -649,7 +650,7 @@ public class WallabagService {
                 deleteArticleWithObject(articleID);
             }
             return true;
-        }, false, this);
+        }, this, null, false);
     }
 
     /**
@@ -798,7 +799,8 @@ public class WallabagService {
      */
     public Response<ResponseBody> exportArticleRaw(int articleID, ResponseFormat format, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> checkResponse(exportArticleCall(articleID, format).execute()), this);
+        return notFoundPolicy.call(() -> checkResponse(exportArticleCall(articleID, format).execute()), this,
+                CompatibilityHelper::isExportArticleSupported, null);
     }
 
     /**
@@ -837,7 +839,8 @@ public class WallabagService {
      */
     public ResponseBody exportArticle(int articleID, ResponseFormat format, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> exportArticleRaw(articleID, format).body(), this);
+        return notFoundPolicy.call(() -> exportArticleRaw(articleID, format).body(), this,
+                CompatibilityHelper::isExportArticleSupported, null);
     }
 
     Call<Article> modifyArticleCall(int articleID, RequestBody requestBody) {
@@ -1060,7 +1063,8 @@ public class WallabagService {
      */
     public Tag deleteTag(String tagLabel, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagCall(tagLabel)), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagCall(tagLabel)), this,
+                CompatibilityHelper::isDeleteTagByLabelSupported, null);
     }
 
     /**
@@ -1152,7 +1156,8 @@ public class WallabagService {
      */
     public List<Tag> deleteTags(Collection<String> tags, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagsCall(tags)), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteTagsCall(tags)), this,
+                CompatibilityHelper::isDeleteTagsByLabelSupported, null);
     }
 
     /**
@@ -1195,7 +1200,8 @@ public class WallabagService {
      */
     public Annotations getAnnotations(int articleID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> execAndCheckBody(getAnnotationsCall(articleID)), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(getAnnotationsCall(articleID)), this,
+                CompatibilityHelper::isGetAnnotationsSupported, null);
     }
 
     /**
@@ -1262,7 +1268,8 @@ public class WallabagService {
     public Annotation addAnnotation(int articleID, List<Annotation.Range> ranges, String text, String quote,
                                     NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> execAndCheckBody(addAnnotationCall(articleID, ranges, text, quote)), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(addAnnotationCall(articleID, ranges, text, quote)), this,
+                CompatibilityHelper::isAddAnnotationSupported, null);
     }
 
     /**
@@ -1316,7 +1323,8 @@ public class WallabagService {
      */
     public Annotation updateAnnotation(int annotationID, String text, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> execAndCheckBody(updateAnnotationCall(annotationID, text)), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(updateAnnotationCall(annotationID, text)), this,
+                CompatibilityHelper::isUpdateAnnotationSupported, null);
     }
 
     /**
@@ -1362,7 +1370,8 @@ public class WallabagService {
      */
     public Annotation deleteAnnotation(int annotationID, NotFoundPolicy notFoundPolicy)
             throws IOException, UnsuccessfulResponseException {
-        return notFoundPolicy.call(() -> execAndCheckBody(deleteAnnotationCall(annotationID)), this);
+        return notFoundPolicy.call(() -> execAndCheckBody(deleteAnnotationCall(annotationID)), this,
+                CompatibilityHelper::isDeleteAnnotationSupported, null);
     }
 
     /**
@@ -1389,6 +1398,8 @@ public class WallabagService {
     /**
      * Returns the wallabag instance info as {@link Info} or {@code null} if the API method is not available
      * (depends on the {@code notFoundPolicy}).
+     * Unlike other methods, this method does not perform {@link CompatibilityHelper#isInfoSupported(String)} check,
+     * so policies like {@link NotFoundPolicy#SMART} do not throw {@code NotFoundException}s.
      *
      * @param notFoundPolicy the {@link NotFoundPolicy} to use
      * @return the wallabag instance info as {@link Info} or {@code null} if the API method is not available

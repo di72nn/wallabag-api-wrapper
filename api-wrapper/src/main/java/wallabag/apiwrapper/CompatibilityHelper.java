@@ -55,6 +55,15 @@ public class CompatibilityHelper {
         return isGetArticlesSupported(wallabagService.getCachedVersion());
     }
 
+    public static boolean isSearchSupported(String serverVersion) {
+        return getVersionCode(serverVersion) >= VERSION_CODE_2_4_0;
+    }
+
+    public static boolean isSearchSupported(WallabagService wallabagService)
+            throws IOException, UnsuccessfulResponseException {
+        return isSearchSupported(wallabagService.getCachedVersion());
+    }
+
     /**
      * Returns {@code true} if {@link WallabagService#addArticle(String)} and {@link WallabagService#addArticleBuilder(String)}
      * methods are supported. Equivalent to {@link #isBaseSupported(String)}.

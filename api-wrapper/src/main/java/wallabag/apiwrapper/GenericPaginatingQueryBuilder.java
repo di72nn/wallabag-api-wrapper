@@ -176,4 +176,6 @@ abstract class GenericPaginatingQueryBuilder<T extends GenericPaginatingQueryBui
      */
     public abstract Articles execute(NotFoundPolicy notFoundPolicy) throws IOException, UnsuccessfulResponseException;
 
+    protected abstract NotFoundPolicy.AvailabilityChecker getAvailabilityChecker();
+
 }
