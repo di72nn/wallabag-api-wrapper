@@ -1,5 +1,18 @@
 # Change Log
 
+## Version 2.0.0-beta.1
+
+*2019.12.08*
+
+ * A `NotFoundPolicy` is introduced, which allows for a better `NotFoundException` handling
+ through its (recommended) `NotFoundPolicy.SMART` policy.
+ * Many methods, that were previously throwing `NotFoundException`s in case of not found entities,
+ are now using that `NotFoundPolicy.SMART` policy by default
+ and returning default values (`null`, `false`, etc.) instead of throwing the `NotFoundException`.
+ * Java 8 is now the lowest supported Java version.
+ Java 8 APIs are not used, so the library is usable with Android.
+
+
 ## Version 1.0.0-rc.4
 
 *2019.12.08*

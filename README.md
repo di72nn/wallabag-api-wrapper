@@ -5,7 +5,7 @@ A simple Java library for accessing the [wallabag API](https://doc.wallabag.org/
 Supported wallabag versions are `2.1.3`-`2.4.0`.
 Earlier versions should still work with some features lacking.
 Newer versions should work, but were not tested against.
-Minimal required Java version is 7.
+Minimal required Java version is 8 (no Java 8 APIs for better Android support).
 
 
 ## How to get
@@ -24,7 +24,7 @@ Add the Jitpack repo to your root build.gradle at the end of repositories:
 Add the dependency:
 ```groovy
     dependencies {
-        implementation 'com.github.di72nn.wallabag-api-wrapper:api-wrapper:v1.0.0-rc.4'
+        implementation 'com.github.di72nn.wallabag-api-wrapper:api-wrapper:v2.0.0-beta.1'
     }
 ```
 
@@ -66,10 +66,10 @@ List<Article> articles = service.getArticlesBuilder()
 
 // or iterate over all articles
 for (ArticleIterator it = service.getArticlesBuilder().articleIterator(); it.hasNext(); ) {
-    Article article = it.next();
+    Article a = it.next();
 
-    System.out.println("Title: " + article.title);
-    System.out.println("URL: " + article.url);
+    System.out.println("Title: " + a.title);
+    System.out.println("URL: " + a.url);
 }
 ```
 
