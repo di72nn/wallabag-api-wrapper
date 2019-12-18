@@ -89,8 +89,7 @@ public class BasicParameterHandler implements ParameterHandler {
     /**
      * {@inheritDoc}
      *
-     * <p>Implementation note:
-     * {@link #refreshToken} is replaced with {@link TokenResponse#refreshToken} if it is not {@code null}.
+     * @implSpec {@link #refreshToken} is replaced with {@link TokenResponse#refreshToken} if it is not {@code null}.
      * {@link #accessToken} is replaced with {@link TokenResponse#accessToken}.
      *
      * @param token the updated {@link TokenResponse}

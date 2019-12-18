@@ -27,8 +27,9 @@ public class ArticleIterator {
     /**
      * Returns {@code true} if the iteration has more elements.
      * <p>See {@link ArticlesPageIterator#hasNext()} regarding {@code NotFoundException}s.
-     * <p>Implementation note: this method actually fetches the next "page",
-     * so a subsequent {@link #next()} call only returns the value.
+     *
+     * @implNote This method actually fetches the next "page",
+     * so a subsequent {@link #next()} call only returns the value
      *
      * @return {@code true} if the iteration has more elements
      * @throws IOException                   in case of network errors

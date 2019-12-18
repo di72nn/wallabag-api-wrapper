@@ -13,6 +13,19 @@ subprojects {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
+    javadoc {
+        options.tags("apiNote:a:API Note:")
+        options.tags("implSpec:a:Implementation Requirements:")
+        options.tags("implNote:a:Implementation Note:")
+        options.tags("param")
+        options.tags("return")
+        options.tags("throws")
+        options.tags("since")
+        options.tags("version")
+        options.tags("serialData")
+        options.tags("see")
+    }
+
     task sourcesJar(type: Jar, dependsOn: classes) {
         from sourceSets.main.allSource
         archiveClassifier = 'sources'
