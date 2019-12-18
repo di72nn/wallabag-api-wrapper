@@ -62,7 +62,7 @@ public class WallabagService {
 
     private final String apiBaseURL;
 
-    private volatile String serverVersion;
+    private final CachedVersionHandler cachedVersionHandler;
 
     /**
      * The {@code ResponseFormat} enum represents the formats available
@@ -79,6 +79,8 @@ public class WallabagService {
 
     /**
      * Returns an instance of {@code WallabagService}.
+     * <p>This method calls {@link #instance(String, ParameterHandler, OkHttpClient, CachedVersionHandler)}
+     * with extra parameters being {@code null}.
      * <p>It should be assumed that each call may create a new instance
      * (which may not be a light-weight operation),
      * so it is advisable to store the returned object for repeated API calls.
@@ -91,28 +93,33 @@ public class WallabagService {
      * @return an instance of {@code WallabagService}
      */
     public static WallabagService instance(String apiBaseURL, ParameterHandler parameterHandler) {
-        return instance(apiBaseURL, parameterHandler, null);
+        return instance(apiBaseURL, parameterHandler, null, null);
     }
 
     /**
      * Returns an instance of {@code WallabagService}.
+     * <p>If {@code cachedVersionHandler} is not provided,
+     * a new instance of {@link SimpleCachedVersionHandler} is used.
      * <p>It should be assumed that each call may create a new instance
      * (which may not be a light-weight operation),
      * so it is advisable to store the returned object for repeated API calls.
      *
-     * @param apiBaseURL       the URL of the wallabag instance in the form of
-     *                         {@code https://wallabag.example.com/subdir-if-any/}.
-     *                         If the trailing slash is missing, it will be appended.
-     *                         See {@link Retrofit.Builder#baseUrl(String)} for more details
-     * @param parameterHandler a {@link ParameterHandler} instance
-     * @param okHttpClient     a nullable {@code OkHttpClient} instance
+     * @param apiBaseURL           the URL of the wallabag instance in the form of
+     *                             {@code https://wallabag.example.com/subdir-if-any/}.
+     *                             If the trailing slash is missing, it will be appended.
+     *                             See {@link Retrofit.Builder#baseUrl(String)} for more details
+     * @param parameterHandler     a {@link ParameterHandler} instance
+     * @param okHttpClient         a {@code null}able {@link OkHttpClient} instance
+     * @param cachedVersionHandler a {@code null}able {@link CachedVersionHandler} instance
      * @return an instance of {@code WallabagService}
      */
-    public static WallabagService instance(String apiBaseURL, ParameterHandler parameterHandler, OkHttpClient okHttpClient) {
-        return new WallabagService(apiBaseURL, parameterHandler, okHttpClient);
+    public static WallabagService instance(String apiBaseURL, ParameterHandler parameterHandler,
+                                           OkHttpClient okHttpClient, CachedVersionHandler cachedVersionHandler) {
+        return new WallabagService(apiBaseURL, parameterHandler, okHttpClient, cachedVersionHandler);
     }
 
-    private WallabagService(String apiBaseURL, ParameterHandler parameterHandler, OkHttpClient okHttpClient) {
+    private WallabagService(String apiBaseURL, ParameterHandler parameterHandler,
+                            OkHttpClient okHttpClient, CachedVersionHandler cachedVersionHandler) {
         nonEmptyString(apiBaseURL, "apiBaseURL");
         nonNullValue(parameterHandler, "parameterHandler");
 
@@ -136,6 +143,9 @@ public class WallabagService {
                 .baseUrl(apiBaseURL)
                 .build()
                 .create(WallabagApiService.class);
+
+        if (cachedVersionHandler == null) cachedVersionHandler = new SimpleCachedVersionHandler();
+        this.cachedVersionHandler = cachedVersionHandler;
     }
 
     String getApiBaseURL() {
@@ -1437,28 +1447,27 @@ public class WallabagService {
     }
 
     /**
-     * Returns a cached value returned by {@link #getVersion()}.
-     * <p>Server-side version changes are not automatically detected. See {@link #resetCachedVersion()}.
+     * Returns a cached server version (in the same format as {@link #getVersion()}).
+     * <p>Caching behavior depends on the {@link CachedVersionHandler}
+     * provided to {@code WallabagService} during creation.
+     * <p>Server-side version changes may not be automatically detected. See {@link #resetCachedVersion()}.
      *
      * @return the server version as {@code String}
      * @throws IOException                   in case of network errors
      * @throws UnsuccessfulResponseException (and subclasses) in case of known wallabag-specific errors
      */
     public String getCachedVersion() throws IOException, UnsuccessfulResponseException {
-        String version = serverVersion;
-        if (version == null) {
-            serverVersion = version = getVersion();
-        }
-
-        return version;
+        return nonNullValue(cachedVersionHandler.getCachedVersion(this), "Cached version");
     }
 
     /**
-     * Resets the cached value stored by {@link #getCachedVersion()}.
-     * The next {@link #getCachedVersion()} call will make a new request to the server and cache the result.
+     * Resets the cached server version so the next call to {@link #getCachedVersion()}
+     * fetches and returns a new value.
+     * <p>Caching behavior depends on the {@link CachedVersionHandler}
+     * provided to {@code WallabagService} during creation.
      */
     public void resetCachedVersion() {
-        serverVersion = null;
+        cachedVersionHandler.resetCachedVersion(this);
     }
 
     /**
