@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 2.0.0-beta.2
+
+*2019.12.26*
+
+ * A `CachedVersionHandler` is introduced, which allows to alter the behavior of `WallabagService.getCachedVersion()`.
+ * The default behavior of `WallabagService.getCachedVersion()` is changed, see `SimpleCachedVersionHandler`.
+ * A breaking change: a new parameter is added to `WallabagService.instance(String, ParameterHandler, OkHttpClient)`.
+
+
 ## Version 2.0.0-beta.1
 
 *2019.12.08*
