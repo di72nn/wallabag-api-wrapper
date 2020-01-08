@@ -103,6 +103,7 @@ public class BatchExistQueryBuilder {
         if (add(url, plain ? null : DigestUtils.sha1Hex(url), plain)) {
             usingPlainUrls = plain;
             usingHashedUrls = !plain;
+            return true;
         }
 
         return false;
