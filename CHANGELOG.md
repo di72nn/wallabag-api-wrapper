@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 2.0.0-beta.3
+
+*2020.01.09*
+
+ * Fixed `BatchExistQueryBuilder.addUrl(String)` which never returned `true`.
+
+
 ## Version 2.0.0-beta.2
 
 *2019.12.26*
