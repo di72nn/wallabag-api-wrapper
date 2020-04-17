@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 2.0.0-beta.4
+
+*2020.04.17*
+
+ * Fixed Android compatibility (`NoSuchMethodError` with `exists` methods).
+ * Updated dependencies.
+
+
 ## Version 2.0.0-beta.3
 
 *2020.01.09*
