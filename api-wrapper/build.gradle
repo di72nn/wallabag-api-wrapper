@@ -1,9 +1,9 @@
 dependencies {
-    implementation 'org.slf4j:slf4j-api:1.7.28'
-    implementation 'com.squareup.okhttp3:okhttp:3.12.6'
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
     implementation 'com.squareup.moshi:moshi:1.8.0'
     implementation 'com.squareup.moshi:moshi-adapters:1.8.0'
-    implementation 'com.squareup.retrofit2:retrofit:2.6.2'
-    implementation 'com.squareup.retrofit2:converter-moshi:2.6.2'
-    implementation 'commons-codec:commons-codec:1.13'
+    implementation 'com.squareup.retrofit2:retrofit:2.6.4'
+    implementation 'com.squareup.retrofit2:converter-moshi:2.6.4'
+    implementation 'commons-codec:commons-codec:1.14'
 }
