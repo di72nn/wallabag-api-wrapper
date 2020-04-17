@@ -1,5 +1,8 @@
 package wallabag.apiwrapper;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
+
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -59,6 +62,12 @@ class Utils {
 
     static String booleanToNullableNumberString(Boolean value) {
         return value != null ? booleanToNumberString(value) : null;
+    }
+
+    static String sha1Hex(String s) {
+        // Android compatibility
+        // https://stackoverflow.com/questions/9126567/method-not-found-using-digestutils-in-android
+        return new String(Hex.encodeHex(DigestUtils.sha(s)));
     }
 
 }

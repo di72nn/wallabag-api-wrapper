@@ -1,7 +1,6 @@
 package wallabag.apiwrapper;
 
 import okhttp3.HttpUrl;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -11,6 +10,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static wallabag.apiwrapper.Utils.nonEmptyString;
+import static wallabag.apiwrapper.Utils.sha1Hex;
 
 /**
  * The {@code BatchExistQueryBuilder} class simplifies batch article "exists" calls
@@ -100,7 +100,7 @@ public class BatchExistQueryBuilder {
             plain = !CompatibilityHelper.isArticleExistsByHashSupportedSafe(wallabagService);
         }
 
-        if (add(url, plain ? null : DigestUtils.sha1Hex(url), plain)) {
+        if (add(url, plain ? null : sha1Hex(url), plain)) {
             usingPlainUrls = plain;
             usingHashedUrls = !plain;
             return true;
@@ -296,7 +296,7 @@ public class BatchExistQueryBuilder {
 
     protected <T> Map<String, T> remap(Map<String, T> src, Map<String, T> dst, T defaultValue) {
         for (String url : urls) {
-            String hash = DigestUtils.sha1Hex(url);
+            String hash = sha1Hex(url);
             T value = src.get(hash);
             if (value == null) {
                 if (!src.containsKey(hash)) {

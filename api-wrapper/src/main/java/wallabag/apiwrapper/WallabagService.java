@@ -5,7 +5,6 @@ import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import org.apache.commons.codec.digest.DigestUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -295,7 +294,7 @@ public class WallabagService {
         nonEmptyString(url, "URL");
 
         if (CompatibilityHelper.isArticleExistsByHashSupportedSafe(this)) {
-            return wallabagApiService.exists(null, DigestUtils.sha1Hex(url));
+            return wallabagApiService.exists(null, sha1Hex(url));
         } else {
             return wallabagApiService.exists(url, null);
         }
@@ -318,7 +317,7 @@ public class WallabagService {
 
         Call<ExistsResponse> call;
         if (CompatibilityHelper.isArticleExistsByHashSupported(this)) {
-            call = wallabagApiService.exists(null, DigestUtils.sha1Hex(url));
+            call = wallabagApiService.exists(null, sha1Hex(url));
         } else {
             call = wallabagApiService.exists(url, null);
         }
@@ -388,7 +387,7 @@ public class WallabagService {
         nonEmptyString(url, "URL");
 
         if (CompatibilityHelper.isArticleExistsByHashSupportedSafe(this)) {
-            return wallabagApiService.existsWithId(null, DigestUtils.sha1Hex(url), "1");
+            return wallabagApiService.existsWithId(null, sha1Hex(url), "1");
         } else {
             return wallabagApiService.existsWithId(url, null, "1");
         }
@@ -411,7 +410,7 @@ public class WallabagService {
 
         Call<ExistsWithIdResponse> call;
         if (CompatibilityHelper.isArticleExistsByHashSupported(this)) {
-            call = wallabagApiService.existsWithId(null, DigestUtils.sha1Hex(url), "1");
+            call = wallabagApiService.existsWithId(null, sha1Hex(url), "1");
         } else {
             call = wallabagApiService.existsWithId(url, null, "1");
         }
