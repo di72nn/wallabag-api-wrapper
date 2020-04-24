@@ -128,8 +128,10 @@ public class WallabagService {
 
         if (okHttpClient == null) okHttpClient = new OkHttpClient();
 
+        TokenRefreshingInterceptor interceptor = new TokenRefreshingInterceptor(parameterHandler);
+
         okHttpClient = okHttpClient.newBuilder()
-                .addInterceptor(new TokenRefreshingInterceptor(apiBaseURL, okHttpClient, parameterHandler))
+                .addInterceptor(interceptor)
                 .build();
 
         wallabagApiService = new Retrofit.Builder()
@@ -142,6 +144,8 @@ public class WallabagService {
                 .baseUrl(apiBaseURL)
                 .build()
                 .create(WallabagApiService.class);
+
+        interceptor.setWallabagApiService(wallabagApiService);
 
         if (cachedVersionHandler == null) cachedVersionHandler = new SimpleCachedVersionHandler();
         this.cachedVersionHandler = cachedVersionHandler;

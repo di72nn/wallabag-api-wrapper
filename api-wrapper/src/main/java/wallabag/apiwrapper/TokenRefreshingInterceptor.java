@@ -4,10 +4,9 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.moshi.MoshiConverterFactory;
 import wallabag.apiwrapper.models.TokenResponse;
-import wallabag.apiwrapper.services.WallabagAuthService;
+import wallabag.apiwrapper.services.Markers;
+import wallabag.apiwrapper.services.WallabagApiService;
 
 import java.io.IOException;
 
@@ -32,32 +31,34 @@ class TokenRefreshingInterceptor implements Interceptor {
 
     private static final Logger LOG = LoggerFactory.getLogger(TokenRefreshingInterceptor.class);
 
-    private final WallabagAuthService wallabagAuthService; // TODO: lazy init?
-
     private final ParameterHandler parameterHandler;
+
+    private WallabagApiService wallabagApiService;
 
     private final Object tokenUpdateLock = new Object();
 
-    TokenRefreshingInterceptor(String apiBaseURL, OkHttpClient okHttpClient, ParameterHandler parameterHandler) {
-        wallabagAuthService = new Retrofit.Builder()
-                .addConverterFactory(MoshiConverterFactory.create())
-                .client(okHttpClient)
-                .baseUrl(apiBaseURL)
-                .build()
-                .create(WallabagAuthService.class);
-
+    TokenRefreshingInterceptor(ParameterHandler parameterHandler) {
         this.parameterHandler = parameterHandler;
+    }
+
+    public void setWallabagApiService(WallabagApiService wallabagApiService) {
+        this.wallabagApiService = wallabagApiService;
     }
 
     @Override
     public okhttp3.Response intercept(Chain chain) throws IOException {
-        LOG.debug("intercept() started");
-
         Request originalRequest = chain.request();
+
+        if (originalRequest.header(Markers.REQUIRES_AUTH_NAME) == null) {
+            return chain.proceed(originalRequest);
+        }
+
+        LOG.debug("intercept() rewriting request");
 
         okhttp3.Response response = null;
 
         Request.Builder requestBuilder = originalRequest.newBuilder();
+        requestBuilder.removeHeader(Markers.REQUIRES_AUTH_NAME);
         setGenericHeaders(requestBuilder);
 
         if (setAuthHeaders(requestBuilder)) {
@@ -193,7 +194,7 @@ class TokenRefreshingInterceptor implements Interceptor {
         }
         RequestBody body = bodyBuilder.build();
 
-        Response<TokenResponse> response = wallabagAuthService.token(body).execute();
+        Response<TokenResponse> response = wallabagApiService.token(body).execute();
 
         if (!response.isSuccessful()) {
             throw new GetTokenException(response);

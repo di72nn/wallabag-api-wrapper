@@ -41,6 +41,8 @@ import wallabag.apiwrapper.models.TokenResponse;
  *         If one of the steps succeeded, the initial API request is retried using the new {@code access token}.
  *     </li>
  * </ul>
+ * <p>{@code ParameterHandler} is not used for API methods that don't require authorization
+ * (like {@link WallabagService#getVersion()}).
  * <p>{@code WallabagService} does not create additional threads,
  * so if only one thread is using a {@code WallabagService} instance,
  * {@code ParameterHandler} usage is inherently thread-safe.
