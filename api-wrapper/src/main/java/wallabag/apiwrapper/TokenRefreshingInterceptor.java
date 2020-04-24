@@ -55,38 +55,57 @@ class TokenRefreshingInterceptor implements Interceptor {
 
         Request originalRequest = chain.request();
 
-        Request request = setHeaders(originalRequest.newBuilder()).build();
-        okhttp3.Response response = chain.proceed(request);
+        okhttp3.Response response = null;
 
-        LOG.debug("intercept() got response");
-        if (!response.isSuccessful()) {
+        Request.Builder requestBuilder = originalRequest.newBuilder();
+        setGenericHeaders(requestBuilder);
+
+        if (setAuthHeaders(requestBuilder)) {
+            response = chain.proceed(requestBuilder.build());
+
+            LOG.debug("intercept() got response");
+            if (response.isSuccessful()) return response;
+
             LOG.info("intercept() unsuccessful response; code: " + response.code());
 
-            if (response.code() == 401) {
-                synchronized (tokenUpdateLock) {
-                    boolean successfullyUpdatedToken = false;
-                    try {
-                        if (getAccessToken()) {
-                            successfullyUpdatedToken = true;
-                        }
-                    } catch (GetTokenException e) {
-                        LOG.debug("intercept() got GetTokenException");
+            if (response.code() != 401) return response;
+        }
 
-                        inspectAndCloseResponse(response);
+        LOG.info("intercept() authorizing");
 
-                        Response<TokenResponse> tokenResponse = e.getResponse();
-                        response = tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
-                    }
+        boolean successfullyUpdatedToken = false;
 
-                    if (successfullyUpdatedToken) {
-                        inspectAndCloseResponse(response);
-
-                        // retry the original request
-                        request = setHeaders(originalRequest.newBuilder()).build();
-                        response = chain.proceed(request);
-                    }
+        try {
+            synchronized (tokenUpdateLock) {
+                if (getAccessToken()) {
+                    LOG.info("intercept() authorized successfully");
+                    successfullyUpdatedToken = true;
+                } else {
+                    LOG.info("intercept() authorization failed");
                 }
             }
+        } catch (GetTokenException e) {
+            LOG.debug("intercept() got GetTokenException");
+
+            if (response != null) inspectAndCloseResponse(response);
+
+            Response<TokenResponse> tokenResponse = e.getResponse();
+            return tokenResponse.raw().newBuilder().body(tokenResponse.errorBody()).build();
+        }
+
+        if (successfullyUpdatedToken && response != null) {
+            inspectAndCloseResponse(response);
+            response = null;
+        }
+
+        if (response == null) {
+            // either retries after successful token update
+            // or makes a request regardless of auth state
+
+            LOG.info("intercept() performing request with new headers");
+
+            setAuthHeaders(requestBuilder);
+            response = chain.proceed(requestBuilder.build());
         }
 
         return response;
@@ -105,18 +124,18 @@ class TokenRefreshingInterceptor implements Interceptor {
         }
     }
 
-    private Request.Builder setHeaders(Request.Builder requestBuilder) {
+    private void setGenericHeaders(Request.Builder requestBuilder) {
         requestBuilder.addHeader(HTTP_ACCEPT_HEADER, HTTP_ACCEPT_VALUE_ANY); // compatibility
-
-        return setAuthHeader(requestBuilder);
     }
 
-    private Request.Builder setAuthHeader(Request.Builder requestBuilder) {
-        String accessToken = parameterHandler.getAccessToken();
-        if (isEmpty(accessToken)) return requestBuilder;
+    private boolean setAuthHeaders(Request.Builder requestBuilder) {
+        requestBuilder.removeHeader(HTTP_AUTHORIZATION_HEADER);
 
-        return requestBuilder.addHeader(HTTP_AUTHORIZATION_HEADER,
-                HTTP_AUTHORIZATION_BEARER_VALUE + accessToken);
+        String accessToken = parameterHandler.getAccessToken();
+        if (isEmpty(accessToken)) return false;
+
+        requestBuilder.addHeader(HTTP_AUTHORIZATION_HEADER, HTTP_AUTHORIZATION_BEARER_VALUE + accessToken);
+        return true;
     }
 
     private boolean getAccessToken() throws IOException, GetTokenException {

@@ -20,7 +20,8 @@ import wallabag.apiwrapper.models.TokenResponse;
  *         So {@code access token} is the absolute minimum to access the API.
  *     </li>
  *     <li>
- *         If the server responds with {@code 401 Unauthorized}, the token refresh procedure is performed:
+ *         If no {@code access token} was provided or if the server responds with {@code 401 Unauthorized},
+ *         the token refresh procedure is performed:
  *         <ol>
  *             <li>
  *                 First, the combination of {@code client ID} + {@code client secret} + {@code refresh token}
@@ -40,9 +41,6 @@ import wallabag.apiwrapper.models.TokenResponse;
  *         If one of the steps succeeded, the initial API request is retried using the new {@code access token}.
  *     </li>
  * </ul>
- * <p>If the provided {@code access token} is empty or {@code null}, no auth headers are added to initial request.
- * If the method requires auth, the token update procedure is performed;
- * if it succeeds, the request is retried with a newly acquired token.
  * <p>{@code WallabagService} does not create additional threads,
  * so if only one thread is using a {@code WallabagService} instance,
  * {@code ParameterHandler} usage is inherently thread-safe.
@@ -101,8 +99,8 @@ public interface ParameterHandler {
     /**
      * Accepts {@link TokenResponse} and returns {@code true} if the token is considered acceptable,
      * i.e. the requests to the API can be continued using the new {@code access token}.
-     * <p>It is recommended to {@code return token.accessToken != null && !token.accessToken.isEmpty();},
-     * it is however safe to always {@code return true}.
+     * <p>It is recommended to {@code return token.accessToken != null && !token.accessToken.isEmpty();}.
+     * It is acceptable (but undesirable) to always {@code return true}.
      *
      * @param token the updated {@link TokenResponse}
      * @return {@code true} if the token is considered acceptable.
