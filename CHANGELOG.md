@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 2.0.0-beta.5
+
+*2020.04.25*
+
+ * Initial request without auth headers is no longer performed:  
+ the token refresh procedure is performed right away if no auth token is provided by the `ParameterHandler`.
+ * Auth headers no longer set on requests that don't require authorization.
+
+
 ## Version 2.0.0-beta.4
 
 *2020.04.17*
