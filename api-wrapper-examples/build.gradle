@@ -1,6 +1,6 @@
 dependencies {
     implementation project(':api-wrapper')
-    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.12'
     implementation 'com.squareup.retrofit2:retrofit:2.6.4'
 
     implementation 'org.slf4j:slf4j-api:1.7.30'
