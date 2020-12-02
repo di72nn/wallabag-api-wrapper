@@ -65,9 +65,12 @@ class Utils {
     }
 
     static String sha1Hex(String s) {
+        byte[] bytes = s.getBytes();
         // Android compatibility
         // https://stackoverflow.com/questions/9126567/method-not-found-using-digestutils-in-android
-        return new String(Hex.encodeHex(DigestUtils.sha(s.getBytes())));
+        @SuppressWarnings("deprecation")
+        char[] chars = Hex.encodeHex(DigestUtils.sha(bytes));
+        return new String(chars);
     }
 
 }
