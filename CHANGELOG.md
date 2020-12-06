@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 2.0.0-beta.6
+
+*2020.12.06*
+
+ * Fixed a problem where an unknown version inside a known version range (like "2.3.8-dev") caused an exception.
+ * Fixed Android 4 compatibility (`NoSuchMethodError` with `exists` methods).
+ * Updated dependencies.
+
+
 ## Version 2.0.0-beta.5
 
 *2020.04.25*
