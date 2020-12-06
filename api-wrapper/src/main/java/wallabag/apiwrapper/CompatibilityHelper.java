@@ -14,19 +14,30 @@ import static wallabag.apiwrapper.Utils.nonNullValue;
  * The naming of the methods is loosely based on the names of the corresponding {@link WallabagService} methods.
  * <p>All methods accept a {@code String} version as returned by {@link WallabagService#getVersion()}
  * or a {@link WallabagService} instance, in which case the {@link WallabagService#getCachedVersion()} is used.
+ * <p>All methods throw {@code NullPointerException} if the passed argument is {@code null}.
  * <p>The information is hardcoded in this class.
  * The first known version is {@code 2.1.3} which is considered "a base version" ({@link #isBaseSupported(String)}).
  * Earlier server versions may work, but lack some features.
  */
 public class CompatibilityHelper {
 
-    private static final int VERSION_CODE_OLDER = 0;
-    private static final int VERSION_CODE_2_1_3 = 2010300;
-    private static final int VERSION_CODE_2_2_0 = 2020000;
-    private static final int VERSION_CODE_2_3_0 = 2030000;
-    private static final int VERSION_CODE_2_3_7 = 2030700;
-    private static final int VERSION_CODE_2_4_0 = 2040000;
-    private static final int VERSION_CODE_NEWER = 999999999;
+    private enum Version {
+        V_2_1_3("2.1.3"),
+        V_2_2_0("2.2.0"),
+        V_2_3_0("2.3.0"),
+        V_2_3_7("2.3.7"),
+        V_2_4_0("2.4.0");
+
+        private final String version;
+
+        Version(String version) {
+            this.version = version;
+        }
+
+        boolean isLowerOrEqual(String version) {
+            return this.version.compareTo(version) <= 0; // TODO: real version parsing and comparison
+        }
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(CompatibilityHelper.class);
 
@@ -56,7 +67,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isSearchSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_4_0;
+        return atLeast(Version.V_2_4_0, serverVersion);
     }
 
     public static boolean isSearchSupported(WallabagService wallabagService)
@@ -97,7 +108,7 @@ public class CompatibilityHelper {
      * @return {@code true} if advanced article adding methods are supported
      */
     public static boolean isAddArticleWithContentSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
+        return atLeast(Version.V_2_3_0, serverVersion);
     }
 
     /**
@@ -115,7 +126,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isReloadArticleSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
+        return atLeast(Version.V_2_2_0, serverVersion);
     }
 
     public static boolean isReloadArticleSupported(WallabagService wallabagService)
@@ -133,7 +144,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isArticleExistsWithIdSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
+        return atLeast(Version.V_2_3_0, serverVersion);
     }
 
     public static boolean isArticleExistsWithIdSupported(WallabagService wallabagService)
@@ -142,7 +153,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isArticleExistsByHashSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_4_0;
+        return atLeast(Version.V_2_4_0, serverVersion);
     }
 
     public static boolean isArticleExistsByHashSupported(WallabagService wallabagService)
@@ -169,7 +180,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isDeleteArticleWithIdSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_3_7;
+        return atLeast(Version.V_2_3_7, serverVersion);
     }
 
     public static boolean isDeleteArticleWithIdSupported(WallabagService wallabagService)
@@ -187,7 +198,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isExportArticleSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
+        return atLeast(Version.V_2_2_0, serverVersion);
     }
 
     public static boolean isExportArticleSupported(WallabagService wallabagService)
@@ -241,7 +252,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isDeleteTagByLabelSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
+        return atLeast(Version.V_2_3_0, serverVersion);
     }
 
     public static boolean isDeleteTagByLabelSupported(WallabagService wallabagService)
@@ -259,7 +270,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isDeleteTagsByLabelSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_3_0;
+        return atLeast(Version.V_2_3_0, serverVersion);
     }
 
     public static boolean isDeleteTagsByLabelSupported(WallabagService wallabagService)
@@ -268,7 +279,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isGetAnnotationsSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
+        return atLeast(Version.V_2_2_0, serverVersion);
     }
 
     public static boolean isGetAnnotationsSupported(WallabagService wallabagService)
@@ -277,7 +288,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isAddAnnotationSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
+        return atLeast(Version.V_2_2_0, serverVersion);
     }
 
     public static boolean isAddAnnotationSupported(WallabagService wallabagService)
@@ -286,7 +297,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isUpdateAnnotationSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
+        return atLeast(Version.V_2_2_0, serverVersion);
     }
 
     public static boolean isUpdateAnnotationSupported(WallabagService wallabagService)
@@ -295,7 +306,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isDeleteAnnotationSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_2_0;
+        return atLeast(Version.V_2_2_0, serverVersion);
     }
 
     public static boolean isDeleteAnnotationSupported(WallabagService wallabagService)
@@ -304,7 +315,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isInfoSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_4_0;
+        return atLeast(Version.V_2_4_0, serverVersion);
     }
 
     public static boolean isInfoSupported(WallabagService wallabagService)
@@ -313,7 +324,7 @@ public class CompatibilityHelper {
     }
 
     public static boolean isBaseSupported(String serverVersion) {
-        return getVersionCode(serverVersion) >= VERSION_CODE_2_1_3;
+        return atLeast(Version.V_2_1_3, serverVersion);
     }
 
     public static boolean isBaseSupported(WallabagService wallabagService)
@@ -321,49 +332,8 @@ public class CompatibilityHelper {
         return isBaseSupported(wallabagService.getCachedVersion());
     }
 
-    private static int getVersionCode(String serverVersion) {
-        nonNullValue(serverVersion, "serverVersion");
-
-        // TODO: real version parsing and comparison
-
-        switch (serverVersion) {
-            case "2.1.3":
-            case "2.1.4":
-            case "2.1.5":
-            case "2.1.6":
-                return VERSION_CODE_2_1_3;
-
-            case "2.2.0":
-            case "2.2.1":
-            case "2.2.2":
-            case "2.2.3":
-                return VERSION_CODE_2_2_0;
-
-            case "2.3.0":
-            case "2.3.1":
-            case "2.3.2":
-            case "2.3.3":
-            case "2.3.4":
-            case "2.3.5":
-            case "2.3.6":
-                return VERSION_CODE_2_3_0;
-
-            case "2.3.7":
-            case "2.3.8":
-                return VERSION_CODE_2_3_7;
-
-            case "2.4.0":
-                return VERSION_CODE_2_4_0;
-        }
-
-        if ("2.4.0".compareTo(serverVersion) < 0) {
-            return VERSION_CODE_NEWER;
-        }
-        if ("2.1.3".compareTo(serverVersion) > 0) {
-            return VERSION_CODE_OLDER;
-        }
-
-        throw new IllegalArgumentException("Unknown server version");
+    private static boolean atLeast(Version min, String version) {
+        return min.isLowerOrEqual(version);
     }
 
 }
